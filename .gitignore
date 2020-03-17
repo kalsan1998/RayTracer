@@ -1,0 +1,6 @@
+./.git
+/build
+.vscode
+*.o
+RayTracer
+RayTracer-BB
