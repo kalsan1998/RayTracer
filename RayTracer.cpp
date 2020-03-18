@@ -10,7 +10,7 @@
 #include "GeometryNode.hpp"
 #include "Illumination.hpp"
 
-const int THREAD_COUNT = 4;
+const int THREAD_COUNT = 12;
 const int ROWS_PER_THREAD = 10;
 
 const double MAX_COLOR_DIFF = 0.1;
@@ -49,7 +49,7 @@ bool ObjectBetween(const SceneNode *node, const Ray &ray, const glm::mat4 &m)
 	{
 		return false;
 	}
-	if (std::min(t_vals[0], t_vals[1]) > 0.00001)
+	if (t_vals[0] > 0.0001 || t_vals[1] > 0.0001)
 	{
 		return true;
 	}
@@ -172,13 +172,11 @@ struct RowRenderArgs
 	size_t nx;
 	size_t ny;
 	size_t y;
+	Image *post_image; // For anti-aliasing
 };
 
 void Render_Row(void *data)
 {
-	double pairs[5][2] = {
-		{0, 0.5}, {0.5, 0}, {0.5, 0.5}, {0.5, 1}, {1, 0.5}};
-
 	struct RowRenderArgs *args = (struct RowRenderArgs *)data;
 	Image &image = *args->image;
 	size_t max_y = std::min(args->ny, args->y + ROWS_PER_THREAD);
@@ -189,32 +187,56 @@ void Render_Row(void *data)
 			double r = 0.0;
 			double g = 0.0;
 			double b = 0.0;
+
+			double p_b = 0.9 * (y + x) / (args->ny + args->nx);
+			glm::vec4 p = {(double)x, (double)y, 0.0, 1.0f};
+			glm::vec3 p_world = glm::vec3(*args->transform * p);
+			Ray ray(*args->eye, p_world);
+			double t_min = std::numeric_limits<double>::max();
+			if (!Traverse(args->root, args->root, ray, *args->lights, *args->ambient, r, g, b, t_min, glm::mat4(), 0))
+			{
+				r = 0.1;
+				g = 0.1;
+				b = 0.1 + p_b;
+			}
+			image(x, y, 0) = r;
+			image(x, y, 1) = g;
+			image(x, y, 2) = b;
+		}
+	}
+	return;
+}
+
+void AntiAlias(void *data)
+{
+
+	double pairs[5][2] = {
+		{0, 0.5}, {0.5, 0}, {0.5, 0.5}, {0.5, 1}, {1, 0.5}};
+	struct RowRenderArgs *args = (struct RowRenderArgs *)data;
+	Image &image = *args->post_image;
+	Image &pre_image = *args->image;
+	size_t max_y = std::min(args->ny - 1, args->y + ROWS_PER_THREAD);
+	for (uint y = args->y; y < max_y; ++y)
+	{
+		for (uint x = 0; x < args->nx - 1; ++x)
+		{
+			double p_b = 0.9 * (y + x) / (args->ny + args->nx);
+			double r = 0.0;
+			double g = 0.0;
+			double b = 0.0;
 			double min_r = 1.0;
 			double min_g = 1.0;
 			double min_b = 1.0;
 			double max_r = 0.0;
 			double max_g = 0.0;
 			double max_b = 0.0;
-
-			double p_b = 0.9 * (y + x) / (args->ny + args->nx);
 			for (int i = 0; i < 2; ++i)
 			{
 				for (int j = 0; j < 2; ++j)
 				{
-					glm::vec4 p = {(double)x + 0.1 + (double)i * 0.8, (double)y + 0.1 + (double)j * 0.8, 0.0, 1.0f};
-					glm::vec3 p_world = glm::vec3(*args->transform * p);
-					Ray ray(*args->eye, p_world);
-					double t_min = std::numeric_limits<double>::max();
-					double rr, gg, bb;
-					if (!Traverse(args->root, args->root, ray, *args->lights, *args->ambient, rr, gg, bb, t_min, glm::mat4(), 0))
-					{
-						rr = 0.1;
-						gg = 0.1;
-						bb = 0.1 + p_b;
-					}
-					rr = std::min(1.0, rr);
-					gg = std::min(1.0, gg);
-					bb = std::min(1.0, bb);
+					double rr = std::min(1.0, pre_image(x + i, y + j, 0));
+					double gg = std::min(1.0, pre_image(x + i, y + j, 1));
+					double bb = std::min(1.0, pre_image(x + i, y + j, 2));
 					r += rr;
 					g += gg;
 					b += bb;
@@ -286,12 +308,13 @@ void Render(
 	const size_t nx = image.height();
 	const size_t ny = image.width();
 	const glm::mat4 transform = GetTransform(nx, ny, eye, view, up, fovy);
+	Image pre_image = image;
 
 	int n = 0;
 	int p = 100 * THREAD_COUNT * ROWS_PER_THREAD / ny;
 	// Initialize threads
 	std::vector<std::thread> threads(THREAD_COUNT);
-	struct RowRenderArgs default_args = {root, &image, &eye, &ambient, &lights, &transform, nx, ny, 0};
+	struct RowRenderArgs default_args = {root, &pre_image, &eye, &ambient, &lights, &transform, nx, ny, 0, &image};
 	std::vector<struct RowRenderArgs> args = std::vector<struct RowRenderArgs>(THREAD_COUNT);
 	for (auto &arg : args)
 	{
@@ -317,6 +340,28 @@ void Render(
 		}
 	}
 	std::cout << "Progress: 100\%" << std::endl;
+
+	n = 0;
+	for (uint y = 0; y < ny; y += (THREAD_COUNT * ROWS_PER_THREAD))
+	{
+		std::cout << "Anti-Aliasing Progress: " << n << "\%\r";
+		std::cout.flush();
+		n += p;
+
+		int offset = 0;
+		for (int i = 0; i < THREAD_COUNT; ++i)
+		{
+			args[i].y = y + offset;
+			offset += ROWS_PER_THREAD;
+			threads[i] = std::thread(AntiAlias, &args[i]);
+		}
+		for (auto &th : threads)
+		{
+			th.join();
+		}
+	}
+	std::cout << "Anti-Aliasing Progress: 100\%" << std::endl;
+
 	time_t time2;
 	time(&time2);
 	std::cout << "Time (s): " << difftime(time2, time1) << std::endl;
