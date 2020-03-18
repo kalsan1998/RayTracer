@@ -9,8 +9,7 @@ class Primitive
 {
 public:
   virtual ~Primitive();
-  virtual int Intersection(const Ray &ray, double *t_vals) { return 0; }
-  virtual glm::vec3 Normal(const glm::vec3 &p) const { return glm::vec3(0.0); }
+  virtual int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const { return 0; }
 };
 
 class NonhierSphere : public Primitive
@@ -23,8 +22,7 @@ public:
   }
   virtual ~NonhierSphere();
 
-  int Intersection(const Ray &rayy, double *t_vals) override;
-  glm::vec3 Normal(const glm::vec3 &p) const override;
+  int Intersection(const Ray &rayy, double *t_vals, glm::vec3 &normal) const override;
 
   float a;
   float b;
@@ -46,8 +44,7 @@ public:
       : m_pos(pos), m_size(size)
   {
   }
-  int Intersection(const Ray &ray, double *t_vals) override;
-  glm::vec3 Normal(const glm::vec3 &p) const override;
+  int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const override;
 
   virtual ~NonhierBox();
 
@@ -61,8 +58,7 @@ class Sphere : public Primitive
 public:
   Sphere();
   virtual ~Sphere();
-  int Intersection(const Ray &ray, double *t_vals) override;
-  glm::vec3 Normal(const glm::vec3 &p) const override;
+  int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const override;
 
   NonhierSphere internal;
 };
@@ -72,8 +68,7 @@ class Cube : public Primitive
 public:
   Cube();
   virtual ~Cube();
-  int Intersection(const Ray &ray, double *t_vals) override;
-  glm::vec3 Normal(const glm::vec3 &p) const override;
+  int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const override;
 
   NonhierBox internal;
 };

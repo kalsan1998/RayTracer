@@ -4,21 +4,28 @@
 #include <vector>
 #include <limits>
 #include <math.h>
+#include <thread>
 
 #include "RayTracer.hpp"
 #include "GeometryNode.hpp"
+#include "Illumination.hpp"
+
+const int THREAD_COUNT = 4;
+const int ROWS_PER_THREAD = 10;
+
+const double MAX_COLOR_DIFF = 0.1;
 
 Ray::Ray(const glm::vec3 &A, const glm::vec3 &B)
-	: A(A), B(B), A_2(A * A), B_A(B-A), B_A_2(B_A * B_A)
+	: A(A), B(B), A_2(A * A), B_A(B - A), B_A_2(B_A * B_A)
 {
 }
 
 glm::vec3 Ray::GetPoint(double t) const
 {
-	return A + t*B_A;
+	return A + t * B_A;
 }
 
-bool ObjectBetween(SceneNode *node, const Ray &ray, const glm::mat4 &m)
+bool ObjectBetween(const SceneNode *node, const Ray &ray, const glm::mat4 &m)
 {
 	glm::mat4 model = m * node->trans;
 	for (SceneNode *child : node->children)
@@ -32,12 +39,13 @@ bool ObjectBetween(SceneNode *node, const Ray &ray, const glm::mat4 &m)
 	{
 		return false;
 	}
-	GeometryNode *geo = static_cast<GeometryNode *>(node);
+	const GeometryNode *geo = static_cast<const GeometryNode *>(node);
 	double t_vals[2] = {0.0, 0.0};
 	glm::mat4 inv_model = glm::inverse(model);
 	const Ray ray_trans = Ray(glm::vec3(inv_model * glm::vec4(ray.A, 1.0f)),
 							  glm::vec3(inv_model * glm::vec4(ray.B, 1.0f)));
-	if (geo->m_primitive->Intersection(ray_trans, t_vals) < 1)
+	glm::vec3 norm;
+	if (geo->m_primitive->Intersection(ray_trans, t_vals, norm) < 1)
 	{
 		return false;
 	}
@@ -46,33 +54,6 @@ bool ObjectBetween(SceneNode *node, const Ray &ray, const glm::mat4 &m)
 		return true;
 	}
 	return false;
-}
-
-glm::vec3 Phong(
-	SceneNode *root,
-	const std::list<Light *> &lights,
-	const glm::vec3 &norm,
-	const glm::vec3 &norm_ray,
-	const glm::vec3 &reflect,
-	const glm::vec3 &point,
-	const glm::vec3 &ambient,
-	Material *material)
-{
-	glm::vec3 col = ambient;
-	for (Light *light : lights)
-	{
-		glm::vec3 norm_pos = glm::normalize(light->position - point);
-		if (ObjectBetween(root, Ray(point, light->position), glm::mat4()))
-		{
-			continue;
-		}
-		glm::vec3 diffuse = material->Diffuse() * std::max(glm::dot(norm_pos, norm), 0.0f);
-		glm::vec3 specular = material->Specular() * pow(std::max(glm::dot(norm_pos, reflect), 0.0f), material->Shininess());
-		double dist = glm::distance(light->position, point);
-		double attenuation = light->falloff[0] + (light->falloff[1] * dist) + (light->falloff[2] * dist * dist);
-		col += light->colour * (diffuse + specular) / (float)attenuation;
-	}
-	return col;
 }
 
 glm::mat4 GetTransform(
@@ -108,8 +89,8 @@ glm::mat3 NormTransform(const glm::mat4 &t)
 }
 
 bool Traverse(
-	SceneNode *root,
-	SceneNode *node,
+	const SceneNode *root,
+	const SceneNode *node,
 	const Ray &ray,
 	const std::list<Light *> &lights,
 	const glm::vec3 &ambient,
@@ -131,13 +112,14 @@ bool Traverse(
 	{
 		return hit;
 	}
-	GeometryNode *geo = static_cast<GeometryNode *>(node);
+	const GeometryNode *geo = static_cast<const GeometryNode *>(node);
 	double t_vals[2] = {0.0, 0.0};
 
 	glm::mat4 inv_model = glm::inverse(model);
 	const Ray ray_trans = Ray(glm::vec3(inv_model * glm::vec4(ray.A, 1.0f)),
 							  glm::vec3(inv_model * glm::vec4(ray.B, 1.0f)));
-	if (geo->m_primitive->Intersection(ray_trans, t_vals) < 2)
+	glm::vec3 normal;
+	if (geo->m_primitive->Intersection(ray_trans, t_vals, normal) < 2)
 	{
 		return hit;
 	}
@@ -150,12 +132,12 @@ bool Traverse(
 	glm::vec3 point = ray_trans.GetPoint(t_min);
 	glm::vec3 world_point = glm::vec3(model * glm::vec4(point, 1.0f));
 	glm::vec3 kd = geo->m_material->Diffuse();
-	glm::vec3 normal = NormTransform(model) * geo->m_primitive->Normal(point);
+	normal = NormTransform(model) * normal;
 
-	glm::vec3 norm = glm::normalize(normal);
+	normal = glm::normalize(normal);
 	glm::vec3 norm_ray = glm::normalize(ray.B_A);
-	glm::vec3 reflect = norm_ray - (2.0f * (glm::dot(norm_ray, norm) * norm));
-	glm::vec3 phong = Phong(root, lights, norm, norm_ray, reflect, world_point, ambient, geo->m_material);
+	glm::vec3 reflect = norm_ray - (2.0f * (glm::dot(norm_ray, normal) * normal));
+	glm::vec3 phong = Phong(root, lights, normal, norm_ray, reflect, world_point, ambient, geo->m_material);
 	double reflectivity = geo->m_material->Reflectivity();
 	if (reflectivity && hits < 5)
 	{
@@ -179,7 +161,110 @@ bool Traverse(
 	return true;
 }
 
-void A4_Render(
+struct RowRenderArgs
+{
+	const SceneNode *root;
+	Image *image;
+	const glm::vec3 *eye;
+	const glm::vec3 *ambient;
+	const std::list<Light *> *lights;
+	const glm::mat4 *transform;
+	size_t nx;
+	size_t ny;
+	size_t y;
+};
+
+void Render_Row(void *data)
+{
+	double pairs[5][2] = {
+		{0, 0.5}, {0.5, 0}, {0.5, 0.5}, {0.5, 1}, {1, 0.5}};
+
+	struct RowRenderArgs *args = (struct RowRenderArgs *)data;
+	Image &image = *args->image;
+	size_t max_y = std::min(args->ny, args->y + ROWS_PER_THREAD);
+	for (uint y = args->y; y < max_y; ++y)
+	{
+		for (uint x = 0; x < args->nx; ++x)
+		{
+			double r = 0.0;
+			double g = 0.0;
+			double b = 0.0;
+			double min_r = 1.0;
+			double min_g = 1.0;
+			double min_b = 1.0;
+			double max_r = 0.0;
+			double max_g = 0.0;
+			double max_b = 0.0;
+
+			double p_b = 0.9 * (y + x) / (args->ny + args->nx);
+			for (int i = 0; i < 2; ++i)
+			{
+				for (int j = 0; j < 2; ++j)
+				{
+					glm::vec4 p = {(double)x + 0.1 + (double)i * 0.8, (double)y + 0.1 + (double)j * 0.8, 0.0, 1.0f};
+					glm::vec3 p_world = glm::vec3(*args->transform * p);
+					Ray ray(*args->eye, p_world);
+					double t_min = std::numeric_limits<double>::max();
+					double rr, gg, bb;
+					if (!Traverse(args->root, args->root, ray, *args->lights, *args->ambient, rr, gg, bb, t_min, glm::mat4(), 0))
+					{
+						rr = 0.1;
+						gg = 0.1;
+						bb = 0.1 + p_b;
+					}
+					rr = std::min(1.0, rr);
+					gg = std::min(1.0, gg);
+					bb = std::min(1.0, bb);
+					r += rr;
+					g += gg;
+					b += bb;
+					min_r = std::min(min_r, rr);
+					min_g = std::min(min_g, gg);
+					min_b = std::min(min_b, bb);
+					max_r = std::max(max_r, rr);
+					max_g = std::max(max_g, gg);
+					max_b = std::max(max_b, bb);
+				}
+			}
+			double diff = ((max_r + max_g + max_b) - (min_r + min_g + min_b)) / 3.0;
+			if (max_r - min_r > MAX_COLOR_DIFF || max_g - min_g > MAX_COLOR_DIFF || max_b - min_b > MAX_COLOR_DIFF || diff > MAX_COLOR_DIFF)
+			{
+				for (int i = 0; i < 5; ++i)
+				{
+					glm::vec4 p = {(double)x + pairs[i][0], (double)y + pairs[i][0], 0.0, 1.0f};
+					glm::vec3 p_world = glm::vec3(*args->transform * p);
+					Ray ray(*args->eye, p_world);
+					double t_min = std::numeric_limits<double>::max();
+					double rr, gg, bb;
+					if (!Traverse(args->root, args->root, ray, *args->lights, *args->ambient, rr, gg, bb, t_min, glm::mat4(), 0))
+					{
+						rr = 0.1;
+						gg = 0.1;
+						bb = 0.1 + p_b;
+					}
+					r += rr;
+					g += gg;
+					b += bb;
+				}
+				r = r / 9.0;
+				g = g / 9.0;
+				b = b / 9.0;
+			}
+			else
+			{
+				r = r / 4.0;
+				g = g / 4.0;
+				b = b / 4.0;
+			}
+			image(x, y, 0) = r;
+			image(x, y, 1) = g;
+			image(x, y, 2) = b;
+		}
+	}
+	return;
+}
+
+void Render(
 	// What to render
 	SceneNode *root,
 
@@ -196,65 +281,43 @@ void A4_Render(
 	const glm::vec3 &ambient,
 	const std::list<Light *> &lights)
 {
+	time_t time1;
+	time(&time1);
+	const size_t nx = image.height();
+	const size_t ny = image.width();
+	const glm::mat4 transform = GetTransform(nx, ny, eye, view, up, fovy);
 
-	// Fill in raytracing code here...
-
-	std::cout << "Calling A4_Render" << std::endl;
-
-	size_t nx = image.height();
-	size_t ny = image.width();
-	glm::mat4 transform = GetTransform(nx, ny, eye, view, up, fovy);
-
-	int ten_p = ny / 20 + 1;
 	int n = 0;
-
-	for (uint y = 0; y < ny; ++y)
+	int p = 100 * THREAD_COUNT * ROWS_PER_THREAD / ny;
+	// Initialize threads
+	std::vector<std::thread> threads(THREAD_COUNT);
+	struct RowRenderArgs default_args = {root, &image, &eye, &ambient, &lights, &transform, nx, ny, 0};
+	std::vector<struct RowRenderArgs> args = std::vector<struct RowRenderArgs>(THREAD_COUNT);
+	for (auto &arg : args)
 	{
-		if (y == n * ten_p)
-		{
-			std::cout << "Progress: " << n++ * 5 << "\%\r";
-			std::cout.flush();
-		}
-		for (uint x = 0; x < nx; ++x)
-		{
-			double r = 0.0;
-			double g = 0.0;
-			double b = 0.0;
-			double p_b = 0.9 * (y + x) / (ny + nx);
-			for (int i = 0; i < 3; ++i)
-			{
-				for (int j = 0; j < 3; ++j)
-				{
-					glm::vec4 p = {(double)x + (double)i / 3, (double)y + (double)j / 3, 0.0, 1.0f};
-					glm::vec3 p_world = glm::vec3(transform * p);
-					Ray ray(eye, p_world);
-					double t_min = std::numeric_limits<double>::max();
-					double rr, gg, bb;
-					if (!Traverse(root, root, ray, lights, ambient, rr, gg, bb, t_min, glm::mat4(), 0))
-					{
-						r += 0.1;
-						g += 0.1;
-						b += 0.1 + p_b;
-					}
-					else
-					{
-						r += rr;
-						g += gg;
-						b += bb;
-					}
-				}
-			}
-			r = r / 9.0;
-			g = g / 9.0;
-			b = b / 9.0;
+		arg = default_args;
+	}
 
-			// Red:
-			image(x, y, 0) = r;
-			// Green:
-			image(x, y, 1) = g;
-			// Blue:
-			image(x, y, 2) = b;
+	for (uint y = 0; y < ny; y += (THREAD_COUNT * ROWS_PER_THREAD))
+	{
+		std::cout << "Progress: " << n << "\%\r";
+		std::cout.flush();
+		n += p;
+
+		int offset = 0;
+		for (int i = 0; i < THREAD_COUNT; ++i)
+		{
+			args[i].y = y + offset;
+			offset += ROWS_PER_THREAD;
+			threads[i] = std::thread(Render_Row, &args[i]);
+		}
+		for (auto &th : threads)
+		{
+			th.join();
 		}
 	}
 	std::cout << "Progress: 100\%" << std::endl;
+	time_t time2;
+	time(&time2);
+	std::cout << "Time (s): " << difftime(time2, time1) << std::endl;
 }

@@ -70,14 +70,14 @@ Mesh::~Mesh()
 	delete bounding_volume;
 }
 
-int Mesh::Intersection(const Ray &ray, double *t_vals)
+int Mesh::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
 {
 	const Ray scale_ray = Ray(glm::vec3(transform * glm::vec4(ray.A, 1.0f)),
 							  glm::vec3(transform * glm::vec4(ray.B, 1.0f)));
 #ifdef RENDER_BOUNDING_VOLUMES
 	return bounding_volume->Intersection(scale_ray, t_vals);
 #endif
-	if (bounding_volume->Intersection(scale_ray, t_vals) < 1)
+	if (bounding_volume->Intersection(scale_ray, t_vals, normal) < 1)
 	{
 		return 0;
 	}
@@ -109,7 +109,12 @@ int Mesh::Intersection(const Ray &ray, double *t_vals)
 		double t = (double)Dz / D;
 		if (t < t_min && t > 0.0)
 		{
-			last_normal = glm::cross(A, B);
+#ifdef RENDER_BOUNDING_VOLUMES
+			glm::vec3 p = ray.GetPoint(t_min);
+			glm::vec3 t_p = glm::vec3(transform * glm::vec4(p, 1.0));
+			return norm_transform * bounding_volume->Normal(t_p);
+#endif
+			normal = glm::cross(A, B);
 			t_min = t;
 		}
 		t_max = std::max(t_max, t);
@@ -127,32 +132,6 @@ int Mesh::Intersection(const Ray &ray, double *t_vals)
 	}
 	return count;
 };
-
-glm::vec3 Mesh::Normal(const glm::vec3 &p) const
-{
-	glm::vec3 t_p = glm::vec3(transform * glm::vec4(p, 1.0));
-#ifdef RENDER_BOUNDING_VOLUMES
-	return norm_transform * bounding_volume->Normal(t_p);
-
-#endif
-	// LAST MINUTE DESPERATION
-	return last_normal;
-	// for (const Triangle &triangle : m_faces)
-	// {
-	// 	glm::vec3 v1 = m_vertices[triangle.v1];
-	// 	glm::vec3 v2 = m_vertices[triangle.v2];
-	// 	glm::vec3 v3 = m_vertices[triangle.v3];
-	// 	glm::vec3 A = v2 - v1;
-	// 	glm::vec3 B = v3 - v1;
-
-	// 	glm::vec3 normal = glm::normalize(glm::cross(A, B));
-	// 	double dot = glm::dot(normal, p - v1);
-	// 	if (std::abs(dot) < 0.0001)
-	// 	{
-	// 		return normal;
-	// 	}
-	// }
-}
 
 std::ostream &operator<<(std::ostream &out, const Mesh &mesh)
 {

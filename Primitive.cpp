@@ -15,14 +15,9 @@ Sphere::~Sphere()
 {
 }
 
-int Sphere::Intersection(const Ray &ray, double *t_vals)
+int Sphere::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
 {
-    return internal.Intersection(ray, t_vals);
-}
-
-glm::vec3 Sphere::Normal(const glm::vec3 &p) const
-{
-    return internal.Normal(p);
+    return internal.Intersection(ray, t_vals, normal);
 }
 
 Cube::Cube()
@@ -32,21 +27,16 @@ Cube::~Cube()
 {
 }
 
-int Cube::Intersection(const Ray &ray, double *t_vals)
+int Cube::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
 {
-    return internal.Intersection(ray, t_vals);
-}
-
-glm::vec3 Cube::Normal(const glm::vec3 &p) const
-{
-    return internal.Normal(p);
+    return internal.Intersection(ray, t_vals, normal);
 }
 
 NonhierSphere::~NonhierSphere()
 {
 }
 
-int NonhierSphere::Intersection(const Ray &ray, double *t_vals)
+int NonhierSphere::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
 {
     glm::vec3 diff = ray.A - m_pos;
     glm::vec3 diff_2 = diff * diff;
@@ -63,19 +53,16 @@ int NonhierSphere::Intersection(const Ray &ray, double *t_vals)
     {
         ++roots;
     }
+    glm::vec3 p = ray.GetPoint(std::min(std::abs(t_vals[0]), std::abs(t_vals[1])));
+    normal = 2.0f * (p - m_pos) / glm::vec3(a_2, b_2, c_2);
     return roots;
 };
-
-glm::vec3 NonhierSphere::Normal(const glm::vec3 &p) const
-{
-    return 2.0f * (p - m_pos) / glm::vec3(a_2, b_2, c_2);
-}
 
 NonhierBox::~NonhierBox()
 {
 }
 
-int NonhierBox::Intersection(const Ray &ray, double *t_vals)
+int NonhierBox::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
 {
     glm::vec3 t0 = (m_pos - ray.A) / ray.B_A;
     glm::vec3 t1 = (m_pos + glm::vec3(m_size, m_size, m_size) - ray.A) / ray.B_A;
@@ -102,12 +89,8 @@ int NonhierBox::Intersection(const Ray &ray, double *t_vals)
     t_vals[0] = t_min;
     t_vals[1] = t_max;
 
-    return 2;
-}
-
-glm::vec3 NonhierBox::Normal(const glm::vec3 &p) const
-{
-    glm::vec3 normal = {0, 0, 0};
+    glm::vec3 p = ray.GetPoint(t_min);
+    normal = {0, 0, 0};
     if (std::abs(p.y - m_pos.y) < kEpsilon)
     {
         normal.y--;
@@ -132,5 +115,6 @@ glm::vec3 NonhierBox::Normal(const glm::vec3 &p) const
     {
         normal.z++;
     }
-    return normal;
+
+    return 2;
 }

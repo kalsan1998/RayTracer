@@ -33,8 +33,7 @@ class Mesh : public Primitive
 public:
 	Mesh(const std::string &fname);
 	~Mesh();
-	int Intersection(const Ray &ray, double *t_vals) override;
-	glm::vec3 Normal(const glm::vec3 &p) const override;
+	int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const override;
 
 private:
 	std::vector<glm::vec3> m_vertices;
@@ -43,7 +42,6 @@ private:
 	NonhierBox *bounding_volume;
 	glm::mat4 transform;
 	glm::mat3 norm_transform;
-	glm::vec3 last_normal;
 
 	friend std::ostream &operator<<(std::ostream &out, const Mesh &mesh);
 };
