@@ -1,22 +1,17 @@
 #!lua
 
 includeDirList = {
-    "../shared",
-    "../shared/include",
-    "../shared/gl3w",
-    "../shared/imgui"
+    "./shared",
+    "./shared/include",
 }
 
 libDirectories = { 
-    "../lib"
+    "./lib"
 }
 
 
 if os.get() == "macosx" then
     linkLibs = {
-        "cs488-framework",
-        "imgui",
-        "glfw3",
         "lua",
 		"lodepng"
     }
@@ -24,18 +19,8 @@ end
 
 if os.get() == "linux" then
     linkLibs = {
-        "cs488-framework",
-        "imgui",
-        "glfw3",
         "lua",
         "lodepng",
-        "GL",
-        "Xinerama",
-        "Xcursor",
-        "Xxf86vm",
-        "Xi",
-        "Xrandr",
-        "X11",
         "stdc++",
         "dl",
         "pthread"
@@ -49,7 +34,7 @@ end
 buildOptions = {"-std=c++11"}
 BBOptions = {buildOptions, " -DRENDER_BOUNDING_VOLUMES"}
 
-solution "CS488-Projects"
+solution "Ray Tracer"
     configurations { "Debug", "Release" }
 
     project "RayTracer"

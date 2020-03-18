@@ -2,8 +2,6 @@
 
 #include "SceneNode.hpp"
 
-#include "cs488-framework/MathUtils.hpp"
-
 #include <iostream>
 #include <sstream>
 using namespace std;
@@ -100,7 +98,7 @@ void SceneNode::rotate(char axis, float angle)
 	default:
 		break;
 	}
-	mat4 rot_matrix = glm::rotate(degreesToRadians(angle), rot_axis);
+	mat4 rot_matrix = glm::rotate(glm::radians(angle), rot_axis);
 	set_transform(rot_matrix * trans);
 }
 
