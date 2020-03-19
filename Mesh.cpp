@@ -107,7 +107,7 @@ int Mesh::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
 			continue;
 		}
 		double t = (double)Dz / D;
-		if (t < t_min && t > 0.0)
+		if (t < t_min && t > 0.0001)
 		{
 #ifdef RENDER_BOUNDING_VOLUMES
 			glm::vec3 p = ray.GetPoint(t_min);

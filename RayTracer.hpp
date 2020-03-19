@@ -23,8 +23,6 @@ public:
 	glm::vec3 GetPoint(double t) const;
 };
 
-bool ObjectBetween(const SceneNode *node, const Ray &ray, const glm::mat4 &m);
-
 void Render(
 	// What to render
 	SceneNode *root,

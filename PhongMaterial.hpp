@@ -6,6 +6,9 @@
 
 #include "Material.hpp"
 
+/*
+  Reflectivity and Refractivity are coefficients for blending the color with Phong.
+*/
 class PhongMaterial : public Material
 {
 public:
@@ -26,4 +29,18 @@ private:
   double m_reflectivity;
   double m_refractivity;
   double m_ior;
+};
+
+class ReflectiveMaterial : public PhongMaterial
+{
+public:
+  ReflectiveMaterial(const glm::vec3 &kd, const glm::vec3 &ks, double shininess, double reflectivity);
+  virtual ~ReflectiveMaterial();
+};
+
+class RefractiveMaterial : public PhongMaterial
+{
+public:
+  RefractiveMaterial(const glm::vec3 &kd, const glm::vec3 &ks, double shininess, double refractivity, double ior);
+  virtual ~RefractiveMaterial();
 };

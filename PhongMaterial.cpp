@@ -12,3 +12,24 @@ PhongMaterial::PhongMaterial(
 PhongMaterial::~PhongMaterial()
 {
 }
+
+ReflectiveMaterial::ReflectiveMaterial(
+	const glm::vec3 &kd, const glm::vec3 &ks, double shininess, double reflectivity)
+	: PhongMaterial(kd, ks, shininess, reflectivity, 0.0, 0.0)
+{
+}
+
+ReflectiveMaterial::~ReflectiveMaterial()
+{
+}
+
+RefractiveMaterial::RefractiveMaterial(
+	const glm::vec3 &kd, const glm::vec3 &ks, double shininess, double refractivity, double ior)
+	: PhongMaterial(kd, ks, shininess, 0.0, refractivity, ior)
+
+{
+}
+
+RefractiveMaterial::~RefractiveMaterial()
+{
+}

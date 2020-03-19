@@ -25,37 +25,6 @@ glm::vec3 Ray::GetPoint(double t) const
 	return A + t * B_A;
 }
 
-bool ObjectBetween(const SceneNode *node, const Ray &ray, const glm::mat4 &m)
-{
-	glm::mat4 model = m * node->trans;
-	for (SceneNode *child : node->children)
-	{
-		if (ObjectBetween(child, ray, model))
-		{
-			return true;
-		}
-	}
-	if (node->m_nodeType != NodeType::GeometryNode)
-	{
-		return false;
-	}
-	const GeometryNode *geo = static_cast<const GeometryNode *>(node);
-	double t_vals[2] = {0.0, 0.0};
-	glm::mat4 inv_model = glm::inverse(model);
-	const Ray ray_trans = Ray(glm::vec3(inv_model * glm::vec4(ray.A, 1.0f)),
-							  glm::vec3(inv_model * glm::vec4(ray.B, 1.0f)));
-	glm::vec3 norm;
-	if (geo->m_primitive->Intersection(ray_trans, t_vals, norm) < 2)
-	{
-		return false;
-	}
-	if (t_vals[0] > 0.0001 || t_vals[1] > 0.0001)
-	{
-		return true;
-	}
-	return false;
-}
-
 glm::mat4 GetTransform(
 	double nx,
 	double ny,
@@ -143,20 +112,22 @@ bool Traverse(
 	double ior = geo->m_material->IndexOfRefraction();
 	double refl_col[3] = {0.1, 0.1, 0.5};
 	double refr_col[3] = {0.1, 0.1, 0.5};
+	if (refractivity && hits < 5)
+	{
+		double tt_min = std::numeric_limits<double>::max();
+		Ray refract_ray = CalculateRefraction(world_point, norm_ray, normal, ior, reflectivity);
+		reflectivity *= refractivity;
+		refractivity -= reflectivity;
+		if (refract_ray.B != world_point)
+		{
+			Traverse(root, root, refract_ray, lights, ambient, refr_col[0], refr_col[1], refr_col[2], tt_min, glm::mat4(), hits + 1);
+		}
+	}
 	if (reflectivity && hits < 5)
 	{
 		double tt_min = std::numeric_limits<double>::max();
 		Ray reflect_ray(world_point, world_point + reflect);
 		Traverse(root, root, reflect_ray, lights, ambient, refl_col[0], refl_col[1], refl_col[2], tt_min, glm::mat4(), hits + 1);
-	}
-	if (refractivity && hits < 5)
-	{
-		double tt_min = std::numeric_limits<double>::max();
-		Ray refract_ray = Snells(world_point, norm_ray, normal, ior);
-		if (refract_ray.B != world_point)
-		{
-			Traverse(root, root, refract_ray, lights, ambient, refr_col[0], refr_col[1], refr_col[2], tt_min, glm::mat4(), hits + 1);
-		}
 	}
 	double opa = 1.0 - reflectivity - refractivity;
 	r = (refractivity * refr_col[0]) + (reflectivity * refl_col[0]) + (opa * phong[0]);

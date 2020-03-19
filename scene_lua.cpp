@@ -430,7 +430,7 @@ extern "C" int gr_material_cmd(lua_State *L)
 }
 
 // Create a Material
-extern "C" int gr_material_ext_cmd(lua_State *L)
+extern "C" int gr_material_refl_cmd(lua_State *L)
 {
   GRLUA_DEBUG_CALL;
 
@@ -443,12 +443,36 @@ extern "C" int gr_material_ext_cmd(lua_State *L)
 
   double shininess = luaL_checknumber(L, 3);
   double reflectivity = luaL_checknumber(L, 4);
-  double refractivity = luaL_checknumber(L, 5);
-  double ior = luaL_checknumber(L, 6);
 
-  data->material = new PhongMaterial(glm::vec3(kd[0], kd[1], kd[2]),
-                                     glm::vec3(ks[0], ks[1], ks[2]),
-                                     shininess, reflectivity, refractivity, ior);
+  data->material = new ReflectiveMaterial(glm::vec3(kd[0], kd[1], kd[2]),
+                                          glm::vec3(ks[0], ks[1], ks[2]),
+                                          shininess, reflectivity);
+
+  luaL_newmetatable(L, "gr.material");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+// Create a Material
+extern "C" int gr_material_refr_cmd(lua_State *L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_material_ud *data = (gr_material_ud *)lua_newuserdata(L, sizeof(gr_material_ud));
+  data->material = 0;
+
+  double kd[3], ks[3];
+  get_tuple(L, 1, kd, 3);
+  get_tuple(L, 2, ks, 3);
+
+  double shininess = luaL_checknumber(L, 3);
+  double refractivity = luaL_checknumber(L, 4);
+  double ior = luaL_checknumber(L, 5);
+
+  data->material = new RefractiveMaterial(glm::vec3(kd[0], kd[1], kd[2]),
+                                          glm::vec3(ks[0], ks[1], ks[2]),
+                                          shininess, refractivity, ior);
 
   luaL_newmetatable(L, "gr.material");
   lua_setmetatable(L, -2);
@@ -594,7 +618,8 @@ static const luaL_Reg grlib_functions[] = {
     {"sphere", gr_sphere_cmd},
     {"joint", gr_joint_cmd},
     {"material", gr_material_cmd},
-    {"material_ext", gr_material_ext_cmd},
+    {"material_refl", gr_material_refl_cmd},
+    {"material_refr", gr_material_refr_cmd},
     {"cube", gr_cube_cmd},
     {"cone", gr_cone_cmd},
     {"nh_sphere", gr_nh_sphere_cmd},

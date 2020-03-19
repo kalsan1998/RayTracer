@@ -1,7 +1,13 @@
 Clean up Primitives
 -- Merge Hier and NonHier
 
-Clean up materials
+Clean up materials**Please**
 -- Make material_ext the only material.
 
-Use Fresnel's
+
+Past Issues:
+-- Dodeca in `nonhier.lua` had pixelated shadows. Issue was that the origin was being counted as an
+intersection, which gave a tiny t-val that would be selected as the min and get ignored in the
+epsilon check.
+
+-- Boxes would cause funky behaviour when rays had 0 slope on x,y, or z.

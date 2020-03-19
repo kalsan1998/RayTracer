@@ -18,8 +18,9 @@ glm::vec3 Phong(
     const glm::vec3 &ambient,
     Material *material);
 
-Ray Snells(
+Ray CalculateRefraction(
     const glm::vec3 &world_point,
     const glm::vec3 &incident,
     const glm::vec3 &normal,
-    double ior);
+    double ior,
+    double &reflect_amount);
