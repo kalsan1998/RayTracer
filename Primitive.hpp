@@ -53,6 +53,27 @@ private:
   double m_size;
 };
 
+class NonhierCone : public Primitive
+{
+public:
+  NonhierCone(const glm::vec3 &pos, double size)
+      : m_pos(pos), m_size(size), m_angle(glm::atan(1.0)),
+        cos_angle(cos(m_angle)), cos_angle_2(cos_angle * cos_angle), size_2(size * size)
+  {
+  }
+  int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const override;
+
+  virtual ~NonhierCone();
+
+private:
+  glm::vec3 m_pos;
+  double m_size;
+  double m_angle;
+  double cos_angle;
+  double cos_angle_2;
+  double size_2;
+};
+
 class Sphere : public Primitive
 {
 public:
@@ -71,4 +92,14 @@ public:
   int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const override;
 
   NonhierBox internal;
+};
+
+class Cone : public Primitive
+{
+public:
+  Cone();
+  virtual ~Cone();
+  int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const override;
+
+  NonhierCone internal;
 };

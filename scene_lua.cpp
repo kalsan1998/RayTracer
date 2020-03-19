@@ -210,6 +210,23 @@ extern "C" int gr_cube_cmd(lua_State *L)
   return 1;
 }
 
+// Create a cone node
+extern "C" int gr_cone_cmd(lua_State *L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_node_ud *data = (gr_node_ud *)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+
+  const char *name = luaL_checkstring(L, 1);
+  data->node = new GeometryNode(name, new Cone());
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
 // Create a non-hierarchical Sphere node
 extern "C" int gr_nh_sphere_cmd(lua_State *L)
 {
@@ -249,6 +266,29 @@ extern "C" int gr_nh_box_cmd(lua_State *L)
   double size = luaL_checknumber(L, 3);
 
   data->node = new GeometryNode(name, new NonhierBox(pos, size));
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+// Create a non-hierarchical Cone node
+extern "C" int gr_nh_cone_cmd(lua_State *L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_node_ud *data = (gr_node_ud *)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+
+  const char *name = luaL_checkstring(L, 1);
+
+  glm::vec3 pos;
+  get_tuple(L, 2, &pos[0], 3);
+
+  double size = luaL_checknumber(L, 3);
+
+  data->node = new GeometryNode(name, new NonhierCone(pos, size));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -554,10 +594,11 @@ static const luaL_Reg grlib_functions[] = {
     {"joint", gr_joint_cmd},
     {"material", gr_material_cmd},
     {"material_ext", gr_material_ext_cmd},
-    // New for assignment 4
     {"cube", gr_cube_cmd},
+    {"cone", gr_cone_cmd},
     {"nh_sphere", gr_nh_sphere_cmd},
     {"nh_box", gr_nh_box_cmd},
+    {"nh_cone", gr_nh_cone_cmd},
     {"mesh", gr_mesh_cmd},
     {"light", gr_light_cmd},
     {"render", gr_render_cmd},
