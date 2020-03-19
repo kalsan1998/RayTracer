@@ -45,7 +45,7 @@ bool ObjectBetween(const SceneNode *node, const Ray &ray, const glm::mat4 &m)
 	const Ray ray_trans = Ray(glm::vec3(inv_model * glm::vec4(ray.A, 1.0f)),
 							  glm::vec3(inv_model * glm::vec4(ray.B, 1.0f)));
 	glm::vec3 norm;
-	if (geo->m_primitive->Intersection(ray_trans, t_vals, norm) < 1)
+	if (geo->m_primitive->Intersection(ray_trans, t_vals, norm) < 2)
 	{
 		return false;
 	}

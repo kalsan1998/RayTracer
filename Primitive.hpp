@@ -57,8 +57,7 @@ class NonhierCone : public Primitive
 {
 public:
   NonhierCone(const glm::vec3 &pos, double size)
-      : m_pos(pos), m_size(size), m_angle(glm::atan(1.0)),
-        cos_angle(cos(m_angle)), cos_angle_2(cos_angle * cos_angle), size_2(size * size)
+      : m_pos(pos), m_size(size), min_y(m_pos.y - m_size), size_2(size * size)
   {
   }
   int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const override;
@@ -68,9 +67,7 @@ public:
 private:
   glm::vec3 m_pos;
   double m_size;
-  double m_angle;
-  double cos_angle;
-  double cos_angle_2;
+  double min_y;
   double size_2;
 };
 

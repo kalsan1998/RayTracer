@@ -165,7 +165,7 @@ int NonhierCone::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal)
     if (t_vals[0] > 0.0)
     {
         p1 = ray.GetPoint(t_vals[0]);
-        if (p1.y < m_pos.y && std::abs(p1.y - m_pos.y) <= m_size)
+        if (p1.y < m_pos.y && p1.y > min_y)
         {
             p = p1;
             ++roots;
@@ -173,15 +173,16 @@ int NonhierCone::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal)
     }
     if (t_vals[1] > 0.0)
     {
+
         p2 = ray.GetPoint(t_vals[1]);
-        if (p2.y < m_pos.y && std::abs(p2.y - m_pos.y) <= m_size)
+        if (p2.y < m_pos.y && p2.y && p2.y > min_y && (t_vals[1] < t_vals[0] || roots == 0))
         {
             ++roots;
-            if (t_vals[1] < t_vals[0] || roots == 0)
-                p = p2;
+            p = p2;
         }
     }
     normal = 2.0f * (p - m_pos) / (float)size_2;
+    normal.y *= -1.0f;
     return roots;
     // glm::vec3 co = ray.A - m_pos;
     // double A = (ray.B_A_2.y * size_2) - cos_angle_2;

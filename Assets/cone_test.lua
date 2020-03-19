@@ -7,18 +7,18 @@ scene = gr.node( 'scene' )
 scene:translate(0, 0, -800)
 
 
-cone = gr.nh_box('cone', {-50, 0, 0}, 100)
--- cone:rotate('Z', -45)
+cone = gr.nh_cone('cone', {0, 0, 0}, 100)
+-- cone:rotate('X', -30)
 scene:add_child(cone)
 cone:set_material(mat1)
 
--- l = gr.nh_sphere('s', {200, 0, 0}, 100)
--- scene:add_child(l)
--- l:set_material(mat1)
+l = gr.nh_sphere('s', {200, 0, 0}, 100)
+scene:add_child(l)
+l:set_material(mat1)
 
--- s = gr.nh_box('c', {-500, -1100, -100}, 1000)
+s = gr.nh_box('c', {-500, -1100, -100}, 1000)
 -- scene:add_child(s)
--- s:set_material(mat2)
+s:set_material(mat2)
 
 -- A small stellated dodecahedron.
 
