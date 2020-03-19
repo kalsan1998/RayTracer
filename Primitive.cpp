@@ -87,17 +87,29 @@ int NonhierBox::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) 
 
     if (ray.B_A.x == 0)
     {
-        t_min_x = 0.0001;
+        if (ray.A.x > max_co.x || ray.A.x < m_pos.x)
+        {
+            return 0;
+        }
+        t_min_x = 0;
         t_max_x = std::numeric_limits<double>::infinity();
     }
     if (ray.B_A.y == 0)
     {
-        t_min_y = 0.0001;
+        if (ray.A.y > max_co.y || ray.A.y < m_pos.y)
+        {
+            return 0;
+        }
+        t_min_y = 0;
         t_max_y = std::numeric_limits<double>::infinity();
     }
     if (ray.B_A.z == 0)
     {
-        t_min_z = 0.0001;
+        if (ray.A.z > max_co.z || ray.A.z < m_pos.z)
+        {
+            return 0;
+        }
+        t_min_z = 0;
         t_max_z = std::numeric_limits<double>::infinity();
     }
     if (t_min_x > t_max_y || t_min_y > t_max_x)
@@ -184,25 +196,4 @@ int NonhierCone::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal)
     normal = 2.0f * (p - m_pos) / (float)size_2;
     normal.y *= -1.0f;
     return roots;
-    // glm::vec3 co = ray.A - m_pos;
-    // double A = (ray.B_A_2.y * size_2) - cos_angle_2;
-    // double B = 2. * ((ray.B_A.y * co.y * size_2) - (cos_angle_2 * glm::dot(ray.B_A, co)));
-    // double C = (co.y * co.y * size_2) - (glm::dot(co, co) * cos_angle_2);
-    // quadraticRoots(A, B, C, t_vals);
-    // glm::vec3 p = ray.GetPoint(std::min(std::abs(t_vals[0]), std::abs(t_vals[1])));
-    // if (p.y - m_pos.y > 0)
-    // {
-    //     return 0;
-    // }
-    // int roots = 0;
-    // if (t_vals[0] > 0.0)
-    // {
-    //     ++roots;
-    // }
-    // if (t_vals[1] > 0.0)
-    // {
-    //     ++roots;
-    // }
-    // normal = 2.0f * (p - m_pos);
-    // return roots;
 }

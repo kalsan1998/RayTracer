@@ -41,7 +41,7 @@ class NonhierBox : public Primitive
 {
 public:
   NonhierBox(const glm::vec3 &pos, double size)
-      : m_pos(pos), m_size(size)
+      : m_pos(pos), m_size(size), max_co(m_pos + (float)m_size)
   {
   }
   int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const override;
@@ -51,6 +51,7 @@ public:
 private:
   glm::vec3 m_pos;
   double m_size;
+  glm::vec3 max_co;
 };
 
 class NonhierCone : public Primitive
