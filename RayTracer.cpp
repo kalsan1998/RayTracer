@@ -8,7 +8,7 @@
 
 #include "RayTracer.hpp"
 #include "GeometryNode.hpp"
-#include "Illumination.hpp"
+#include "SurfaceInteraction.hpp"
 
 const int THREAD_COUNT = 12;
 const int ROWS_PER_THREAD = 10;
@@ -103,14 +103,14 @@ bool Traverse(
 {
 	const glm::mat4 model = trans * node->trans;
 
-	bool hit = false;
+	bool did_hit = false;
 	for (SceneNode *child : node->children)
 	{
-		hit |= Traverse(root, child, ray, lights, ambient, r, g, b, t_min, model, hits);
+		did_hit |= Traverse(root, child, ray, lights, ambient, r, g, b, t_min, model, hits);
 	}
 	if (node->m_nodeType != NodeType::GeometryNode)
 	{
-		return hit;
+		return did_hit;
 	}
 	const GeometryNode *geo = static_cast<const GeometryNode *>(node);
 	double t_vals[2] = {0.0, 0.0};
@@ -121,12 +121,12 @@ bool Traverse(
 	glm::vec3 normal;
 	if (geo->m_primitive->Intersection(ray_trans, t_vals, normal) < 2)
 	{
-		return hit;
+		return did_hit;
 	}
 	double mt = std::min(t_vals[0], t_vals[1]);
-	if (t_min <= mt || mt <= 0.0)
+	if (t_min <= mt || mt <= 0.001)
 	{
-		return hit;
+		return did_hit;
 	}
 	t_min = mt;
 	glm::vec3 point = ray_trans.GetPoint(t_min);
@@ -139,24 +139,29 @@ bool Traverse(
 	glm::vec3 reflect = norm_ray - (2.0f * (glm::dot(norm_ray, normal) * normal));
 	glm::vec3 phong = Phong(root, lights, normal, norm_ray, reflect, world_point, ambient, geo->m_material);
 	double reflectivity = geo->m_material->Reflectivity();
+	double refractivity = geo->m_material->Refractivity();
+	double ior = geo->m_material->IndexOfRefraction();
+	double refl_col[3] = {0.1, 0.1, 0.5};
+	double refr_col[3] = {0.1, 0.1, 0.5};
 	if (reflectivity && hits < 5)
 	{
-		double rr = 0.1;
-		double gg = 0.1;
-		double bb = 0.5;
 		double tt_min = std::numeric_limits<double>::max();
 		Ray reflect_ray(world_point, world_point + reflect);
-		Traverse(root, root, reflect_ray, lights, ambient, rr, gg, bb, tt_min, glm::mat4(), hits + 1);
-		r = (reflectivity * rr) + ((1.0 - reflectivity) * phong[0]);
-		g = (reflectivity * gg) + ((1.0 - reflectivity) * phong[1]);
-		b = (reflectivity * bb) + ((1.0 - reflectivity) * phong[2]);
+		Traverse(root, root, reflect_ray, lights, ambient, refl_col[0], refl_col[1], refl_col[2], tt_min, glm::mat4(), hits + 1);
 	}
-	else
+	if (refractivity && hits < 5)
 	{
-		r = phong[0];
-		g = phong[1];
-		b = phong[2];
+		double tt_min = std::numeric_limits<double>::max();
+		Ray refract_ray = Snells(world_point, norm_ray, normal, ior);
+		if (refract_ray.B != world_point)
+		{
+			Traverse(root, root, refract_ray, lights, ambient, refr_col[0], refr_col[1], refr_col[2], tt_min, glm::mat4(), hits + 1);
+		}
 	}
+	double opa = 1.0 - reflectivity - refractivity;
+	r = (refractivity * refr_col[0]) + (reflectivity * refl_col[0]) + (opa * phong[0]);
+	g = (refractivity * refr_col[1]) + (reflectivity * refl_col[1]) + (opa * phong[1]);
+	b = (refractivity * refr_col[2]) + (reflectivity * refl_col[2]) + (opa * phong[2]);
 
 	return true;
 }

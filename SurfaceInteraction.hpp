@@ -6,6 +6,7 @@
 class SceneNode;
 class Light;
 class Material;
+class Ray;
 
 glm::vec3 Phong(
     const SceneNode *root,
@@ -16,3 +17,9 @@ glm::vec3 Phong(
     const glm::vec3 &point,
     const glm::vec3 &ambient,
     Material *material);
+
+Ray Snells(
+    const glm::vec3 &world_point,
+    const glm::vec3 &incident,
+    const glm::vec3 &normal,
+    double ior);

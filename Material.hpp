@@ -12,6 +12,8 @@ public:
   virtual glm::vec3 Specular() const { return glm::vec3(0.0f); }
   virtual double Shininess() const { return 0.0; }
   virtual double Reflectivity() const { return 0.0; }
+  virtual double Refractivity() const { return 0.0; }
+  virtual double IndexOfRefraction() const { return 0.0; }
 
 protected:
   Material();

@@ -1,1 +1,7 @@
-Clean up Primitives.
+Clean up Primitives
+-- Merge Hier and NonHier
+
+Clean up materials
+-- Make material_ext the only material.
+
+Use Fresnel's

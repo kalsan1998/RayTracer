@@ -9,12 +9,14 @@
 class PhongMaterial : public Material
 {
 public:
-  PhongMaterial(const glm::vec3 &kd, const glm::vec3 &ks, double shininess, double reflectivity);
+  PhongMaterial(const glm::vec3 &kd, const glm::vec3 &ks, double shininess, double reflectivity, double refractivity, double ior);
   virtual ~PhongMaterial();
   glm::vec3 Diffuse() const override { return m_kd; }
   glm::vec3 Specular() const override { return m_ks; }
   double Shininess() const override { return m_shininess; }
   double Reflectivity() const override { return m_reflectivity; }
+  double Refractivity() const override { return m_refractivity; }
+  double IndexOfRefraction() const override { return m_ior; }
 
 private:
   glm::vec3 m_kd;
@@ -22,4 +24,6 @@ private:
 
   double m_shininess;
   double m_reflectivity;
+  double m_refractivity;
+  double m_ior;
 };
