@@ -88,17 +88,17 @@ bool Traverse(
 	const Ray ray_trans = Ray(glm::vec3(inv_model * glm::vec4(ray.A, 1.0f)),
 							  glm::vec3(inv_model * glm::vec4(ray.B, 1.0f)));
 	glm::vec3 normal;
-	if (geo->m_primitive->Intersection(ray_trans, t_vals, normal) < 2)
+	if (geo->m_primitive->Intersection(ray_trans, t_vals, normal) < 1)
 	{
 		return did_hit;
 	}
-	double mt = std::min(t_vals[0], t_vals[1]);
-	if (t_min <= mt || mt <= 0.001)
+	double mt = t_vals[0];
+	if (t_min <= mt || mt <= 0.0001)
 	{
 		return did_hit;
 	}
 	t_min = mt;
-	glm::vec3 point = ray_trans.GetPoint(t_min);
+	glm::vec3 point = ray_trans.GetPoint(t_min); // TODO: this is redundant
 	glm::vec3 world_point = glm::vec3(model * glm::vec4(point, 1.0f));
 	glm::vec3 kd = geo->m_material->Diffuse();
 	normal = NormTransform(model) * normal;

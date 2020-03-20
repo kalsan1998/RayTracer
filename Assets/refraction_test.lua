@@ -34,19 +34,19 @@ s:scale(4, 0.6, 0.6)
 s:translate(0, 4, 0)
 
 -- the floor
-sea = gr.mesh( 'sea', 'plane.obj' )
+sea = gr.mesh( 'sea', './Assets/plane.obj' )
 scene:add_child(sea)
 sea:set_material(water)
 sea:scale(30, 30, 30)
 sea:translate(0, 1, 0)
 
-plane = gr.mesh( 'plane', 'plane.obj' )
+plane = gr.mesh( 'plane', './Assets/plane.obj' )
 scene:add_child(plane)
 plane:set_material(grass)
 plane:scale(30, 30, 30)
 
 
-poly = gr.mesh( 'poly', 'dodeca.obj' )
+poly = gr.mesh( 'poly', './Assets/dodeca.obj' )
 scene:add_child(poly)
 poly:translate(-2, 1.618034, 0)
 poly:set_material(blue)
@@ -60,6 +60,6 @@ sphere:set_material(blue)
 l1 = gr.light({200,200,400}, {0.8, 0.8, 0.8}, {1, 0, 0})
 l2 = gr.light({0, 5, -20}, {0.4, 0.4, 0.8}, {1, 0, 0})
 
-gr.render(scene, 'refraction.png', 512, 512, 
+gr.render(scene, './images/refraction.png', 512, 512, 
 	  {0, 0, 0,}, {0, 0, -1}, {0, 1, 0}, 50,
 	  {0.4, 0.4, 0.4}, {l1, l2})

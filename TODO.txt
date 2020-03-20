@@ -1,5 +1,12 @@
-Clean up materials**Please**
--- Make material_ext the only material.
+-- Primitives return boolean if hit. Also determines the point. These t_val checks are getting dumb.
+Tests:
+-- cone_test at deg > 70 
+-- refractivity test
+-- nonhier.lua
+-- cylinder test upright
+
+Make martini
+
 
 
 Past Issues:
@@ -8,3 +15,6 @@ intersection, which gave a tiny t-val that would be selected as the min and get 
 epsilon check.
 
 -- Boxes would cause funky behaviour when rays had 0 slope on x,y, or z.
+
+-- Full cylinder and shadows weren't rendered. Changed min hit count to 1 from 2. Also had to change
+t_val check to check that both t vals were greater than 0.001 to prevent random shadows.
