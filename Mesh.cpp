@@ -70,19 +70,18 @@ Mesh::~Mesh()
 	delete bounding_volume;
 }
 
-int Mesh::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
+bool Mesh::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const
 {
 	const Ray scale_ray = Ray(glm::vec3(transform * glm::vec4(ray.A, 1.0f)),
 							  glm::vec3(transform * glm::vec4(ray.B, 1.0f)));
-#ifdef RENDER_BOUNDING_VOLUMES
-	return bounding_volume->Intersection(scale_ray, t_vals);
-#endif
-	if (bounding_volume->Intersection(scale_ray, t_vals, normal) < 1)
+	double t_m = t_min;
+	// Note this will make us ignore the entire object if the bounding box is close to or behind the
+	// ray origin. This is okay with me.
+	if (!bounding_volume->DoesRayIntersect(scale_ray, t_m, normal, point))
 	{
-		return 0;
+		return false;
 	}
-	double t_min = std::numeric_limits<double>::infinity();
-	double t_max = 0.0;
+	bool found = false;
 	for (const Triangle &triangle : m_faces)
 	{
 		glm::vec3 v1 = m_vertices[triangle.v1];
@@ -109,47 +108,18 @@ int Mesh::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
 		double t = (double)Dz / D;
 		if (t < t_min && t > 0.0001)
 		{
-#ifdef RENDER_BOUNDING_VOLUMES
-			glm::vec3 p = ray.GetPoint(t_min);
-			glm::vec3 t_p = glm::vec3(transform * glm::vec4(p, 1.0));
-			return norm_transform * bounding_volume->Normal(t_p);
-#endif
 			normal = glm::cross(A, B);
 			t_min = t;
+			found = true;
 		}
-		t_max = std::max(t_max, t);
 	}
-	t_vals[0] = t_min;
-	t_vals[1] = t_max;
-	int count = 0;
-	if (t_min < std::numeric_limits<double>::infinity())
+	if (found)
 	{
-		++count;
+		point = ray.GetPoint(t_min);
+		return true;
 	}
-	if (t_max > 0.0)
+	else
 	{
-		++count;
+		return false;
 	}
-	return count;
 };
-
-std::ostream &operator<<(std::ostream &out, const Mesh &mesh)
-{
-	out << "mesh {";
-	/*
-  
-  for( size_t idx = 0; idx < mesh.m_verts.size(); ++idx ) {
-  	const MeshVertex& v = mesh.m_verts[idx];
-  	out << glm::to_string( v.m_position );
-	if( mesh.m_have_norm ) {
-  	  out << " / " << glm::to_string( v.m_normal );
-	}
-	if( mesh.m_have_uv ) {
-  	  out << " / " << glm::to_string( v.m_uv );
-	}
-  }
-
-*/
-	out << "}";
-	return out;
-}

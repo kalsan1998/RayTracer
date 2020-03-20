@@ -10,11 +10,6 @@
 
 #include "Primitive.hpp"
 
-// Use this #define to selectively compile your code to render the
-// bounding boxes around your mesh objects. Uncomment this option
-// to turn it on.
-// #define RENDER_BOUNDING_VOLUMES
-
 struct Triangle
 {
 	size_t v1;
@@ -33,7 +28,7 @@ class Mesh : public Primitive
 public:
 	Mesh(const std::string &fname);
 	~Mesh();
-	int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const override;
+	bool DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const override;
 
 private:
 	std::vector<glm::vec3> m_vertices;
@@ -42,6 +37,4 @@ private:
 	Box *bounding_volume;
 	glm::mat4 transform;
 	glm::mat3 norm_transform;
-
-	friend std::ostream &operator<<(std::ostream &out, const Mesh &mesh);
 };

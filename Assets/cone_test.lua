@@ -8,7 +8,8 @@ scene:translate(0, 0, -800)
 
 
 cone = gr.nh_cone('cone', {0, 0, 0}, 100)
-cone:rotate('X', 70)
+cone:rotate('X', -45)
+cone:translate(0,100, 400)
 scene:add_child(cone)
 cone:set_material(mat1)
 

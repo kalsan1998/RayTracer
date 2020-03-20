@@ -82,23 +82,16 @@ bool Traverse(
 		return did_hit;
 	}
 	const GeometryNode *geo = static_cast<const GeometryNode *>(node);
-	double t_vals[2] = {0.0, 0.0};
 
 	glm::mat4 inv_model = glm::inverse(model);
 	const Ray ray_trans = Ray(glm::vec3(inv_model * glm::vec4(ray.A, 1.0f)),
 							  glm::vec3(inv_model * glm::vec4(ray.B, 1.0f)));
 	glm::vec3 normal;
-	if (geo->m_primitive->Intersection(ray_trans, t_vals, normal) < 1)
+	glm::vec3 point;
+	if (!geo->m_primitive->DoesRayIntersect(ray_trans, t_min, normal, point))
 	{
 		return did_hit;
 	}
-	double mt = t_vals[0];
-	if (t_min <= mt || mt <= 0.0001)
-	{
-		return did_hit;
-	}
-	t_min = mt;
-	glm::vec3 point = ray_trans.GetPoint(t_min); // TODO: this is redundant
 	glm::vec3 world_point = glm::vec3(model * glm::vec4(point, 1.0f));
 	glm::vec3 kd = geo->m_material->Diffuse();
 	normal = NormTransform(model) * normal;

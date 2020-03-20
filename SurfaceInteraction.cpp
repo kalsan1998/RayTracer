@@ -29,16 +29,17 @@ double LightReached(const SceneNode *node, const Ray &ray, const glm::mat4 &m)
     glm::mat4 inv_model = glm::inverse(model);
     const Ray ray_trans = Ray(glm::vec3(inv_model * glm::vec4(ray.A, 1.0f)),
                               glm::vec3(inv_model * glm::vec4(ray.B, 1.0f)));
-    glm::vec3 norm;
-    if (geo->m_primitive->Intersection(ray_trans, t_vals, norm) < 1)
+    glm::vec3 normal;
+    glm::vec3 point;
+    double t_min = std::numeric_limits<double>::infinity();
+    if (!geo->m_primitive->DoesRayIntersect(ray_trans, t_min, normal, point))
     {
         return reached;
     }
-    if (t_vals[0] > 0.0001 && t_vals[1] > 0.0001)
+    else
     {
         return reached * geo->m_material->Refractivity();
     }
-    return reached;
 }
 
 glm::vec3 Phong(

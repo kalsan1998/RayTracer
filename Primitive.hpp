@@ -9,7 +9,9 @@ class Primitive
 {
 public:
   virtual ~Primitive();
-  virtual int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const { return 0; }
+  // Returns true if ray intersects with a t-val less than t_min.
+  // Updates normal, t_min, and point accordingly.
+  virtual bool DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const { return 0; }
 };
 
 class Sphere : public Primitive
@@ -19,7 +21,7 @@ public:
   Sphere(const glm::vec3 &pos, double radius)
       : pos(pos), radius(radius), radius_2(radius * radius) {}
   virtual ~Sphere();
-  int Intersection(const Ray &rayy, double *t_vals, glm::vec3 &normal) const override;
+  bool DoesRayIntersect(const Ray &rayy, double &t_min, glm::vec3 &normal, glm::vec3 &point) const override;
 
   double radius;
   double radius_2;
@@ -35,7 +37,7 @@ public:
   Box(const glm::vec3 &pos, double size)
       : pos(pos), size(size), max_co(pos + (float)size) {}
   virtual ~Box();
-  int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const override;
+  bool DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const override;
 
 private:
   glm::vec3 pos;
@@ -51,7 +53,7 @@ public:
       : pos(pos), size(size), min_y(pos.y - size), size_2(size * size) {}
   virtual ~Cone();
 
-  int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const override;
+  bool DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const override;
 
 private:
   glm::vec3 pos;
@@ -68,7 +70,7 @@ public:
       : pos(pos), radius(radius), radius_2(radius * radius),
         min_y(pos.y - height), max_y(pos.y + height) {}
   virtual ~Cylinder();
-  int Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const override;
+  bool DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const override;
 
 private:
   glm::vec3 pos;
