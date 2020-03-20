@@ -202,7 +202,7 @@ extern "C" int gr_cube_cmd(lua_State *L)
   data->node = 0;
 
   const char *name = luaL_checkstring(L, 1);
-  data->node = new GeometryNode(name, new Cube());
+  data->node = new GeometryNode(name, new Box());
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -242,7 +242,7 @@ extern "C" int gr_nh_sphere_cmd(lua_State *L)
 
   double radius = luaL_checknumber(L, 3);
 
-  data->node = new GeometryNode(name, new NonhierSphere(pos, radius));
+  data->node = new GeometryNode(name, new Sphere(pos, radius));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -265,7 +265,7 @@ extern "C" int gr_nh_box_cmd(lua_State *L)
 
   double size = luaL_checknumber(L, 3);
 
-  data->node = new GeometryNode(name, new NonhierBox(pos, size));
+  data->node = new GeometryNode(name, new Box(pos, size));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -288,7 +288,7 @@ extern "C" int gr_nh_cone_cmd(lua_State *L)
 
   double size = luaL_checknumber(L, 3);
 
-  data->node = new GeometryNode(name, new NonhierCone(pos, size));
+  data->node = new GeometryNode(name, new Cone(pos, size));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);

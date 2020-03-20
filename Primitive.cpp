@@ -8,53 +8,17 @@ Primitive::~Primitive()
 {
 }
 
-Sphere::Sphere()
-    : internal({0.0, 0.0, 0.0}, 1.0) {}
-
 Sphere::~Sphere()
 {
 }
 
 int Sphere::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
 {
-    return internal.Intersection(ray, t_vals, normal);
-}
-
-Cube::Cube()
-    : internal({0.0, 0.0, 0.0}, 1.0) {}
-
-Cube::~Cube()
-{
-}
-
-int Cube::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
-{
-    return internal.Intersection(ray, t_vals, normal);
-}
-
-Cone::Cone()
-    : internal({0.0, 0.0, 0.0}, 1.0) {}
-
-Cone::~Cone()
-{
-}
-
-int Cone::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
-{
-    return internal.Intersection(ray, t_vals, normal);
-}
-
-NonhierSphere::~NonhierSphere()
-{
-}
-
-int NonhierSphere::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
-{
     glm::vec3 diff = ray.A - m_pos;
     glm::vec3 diff_2 = diff * diff;
-    double A = ray.B_A_2.x / a_2 + ray.B_A_2.y / b_2 + ray.B_A_2.z / c_2;
-    double B = 2.0 * ((ray.B_A.x * diff.x / a_2) + (ray.B_A.y * diff.y / b_2) + (ray.B_A.z * diff.z / c_2));
-    double C = diff_2.x / a_2 + diff_2.y / b_2 + diff_2.z / c_2 - 1.0;
+    double A = ray.B_A_2.x / radius_2 + ray.B_A_2.y / radius_2 + ray.B_A_2.z / radius_2;
+    double B = 2.0 * ((ray.B_A.x * diff.x / radius_2) + (ray.B_A.y * diff.y / radius_2) + (ray.B_A.z * diff.z / radius_2));
+    double C = diff_2.x / radius_2 + diff_2.y / radius_2 + diff_2.z / radius_2 - 1.0;
     quadraticRoots(A, B, C, t_vals);
     int roots = 0;
     if (t_vals[0] > 0.0)
@@ -66,15 +30,15 @@ int NonhierSphere::Intersection(const Ray &ray, double *t_vals, glm::vec3 &norma
         ++roots;
     }
     glm::vec3 p = ray.GetPoint(std::min(std::abs(t_vals[0]), std::abs(t_vals[1])));
-    normal = 2.0f * (p - m_pos) / glm::vec3(a_2, b_2, c_2);
+    normal = 2.0f * (p - m_pos) / glm::vec3(radius_2, radius_2, radius_2);
     return roots;
 };
 
-NonhierBox::~NonhierBox()
+Box::~Box()
 {
 }
 
-int NonhierBox::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
+int Box::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
 {
     glm::vec3 t0 = (m_pos - ray.A) / ray.B_A;
     glm::vec3 t1 = (m_pos + glm::vec3(m_size, m_size, m_size) - ray.A) / ray.B_A;
@@ -158,11 +122,11 @@ int NonhierBox::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) 
     return 2;
 }
 
-NonhierCone::~NonhierCone()
+Cone::~Cone()
 {
 }
 
-int NonhierCone::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
+int Cone::Intersection(const Ray &ray, double *t_vals, glm::vec3 &normal) const
 {
     glm::vec3 diff = ray.A - m_pos;
     glm::vec3 diff_2 = diff * diff;

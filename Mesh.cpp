@@ -45,7 +45,7 @@ Mesh::Mesh(const std::string &fname)
 	}
 	glm::vec3 min = glm::vec3(min_x, min_y, min_z);
 	glm::vec3 max = glm::vec3(max_x, max_y, max_z);
-	bounding_volume = new NonhierBox(glm::vec3(0, 0, 0), 1.0);
+	bounding_volume = new Box(glm::vec3(0, 0, 0), 1.0);
 	if (max_x == min_x)
 	{
 		max_x += 0.001;
