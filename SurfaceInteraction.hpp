@@ -16,6 +16,7 @@ glm::vec3 Phong(
     const glm::vec3 &reflect,
     const glm::vec3 &point,
     const glm::vec3 &ambient,
+    const glm::vec3 &texture_color,
     Material *material);
 
 Ray CalculateRefraction(

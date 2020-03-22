@@ -15,6 +15,5 @@ public:
   virtual double Refractivity() const { return 0.0; }
   virtual double IndexOfRefraction() const { return 0.0; }
 
-protected:
   Material();
 };

@@ -9,6 +9,10 @@ GeometryNode::GeometryNode(
 	const std::string &name, Primitive *prim, Material *mat)
 	: SceneNode(name), m_material(mat), m_primitive(prim)
 {
+	if (!m_material)
+	{
+		m_material = new Material();
+	}
 	m_nodeType = NodeType::GeometryNode;
 }
 

@@ -50,9 +50,10 @@ glm::vec3 Phong(
     const glm::vec3 &reflect,
     const glm::vec3 &point,
     const glm::vec3 &ambient,
+    const glm::vec3 &texture_color,
     Material *material)
 {
-    glm::vec3 object_color = material->Diffuse(); // + texture_color;
+    glm::vec3 object_color = material->Diffuse() + texture_color;
     glm::vec3 col = ambient * object_color;
     for (Light *light : lights)
     {

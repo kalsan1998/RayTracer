@@ -2,6 +2,8 @@ DODOs:
 
 Make martini
 
+-- Optimization: Don't calculate normal and uv in intersection function. For checking shadows we
+don't need this.
 
 Past Issues:
 -- Dodeca in `nonhier.lua` had pixelated shadows. Issue was that the origin was being counted as an

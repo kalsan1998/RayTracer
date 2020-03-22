@@ -9,6 +9,7 @@
 #include "RayTracer.hpp"
 #include "GeometryNode.hpp"
 #include "SurfaceInteraction.hpp"
+#include "Texture.hpp"
 
 const int THREAD_COUNT = 12;
 const int ROWS_PER_THREAD = 10;
@@ -92,6 +93,8 @@ bool Traverse(
 	{
 		return did_hit;
 	}
+	glm::vec2 uv = geo->m_primitive->GetUVCoordinates(point);
+	glm::vec3 texture_color = !geo->m_texture ? glm::vec3(0) : geo->m_texture->GetColor(uv);
 	glm::vec3 world_point = glm::vec3(model * glm::vec4(point, 1.0f));
 	glm::vec3 kd = geo->m_material->Diffuse();
 	normal = NormTransform(model) * normal;
@@ -99,7 +102,7 @@ bool Traverse(
 	normal = glm::normalize(normal);
 	glm::vec3 norm_ray = glm::normalize(ray.B_A);
 	glm::vec3 reflect = norm_ray - (2.0f * (glm::dot(norm_ray, normal) * normal));
-	glm::vec3 phong = Phong(root, lights, normal, norm_ray, reflect, world_point, ambient, geo->m_material);
+	glm::vec3 phong = Phong(root, lights, normal, norm_ray, reflect, world_point, ambient, texture_color, geo->m_material);
 	double reflectivity = geo->m_material->Reflectivity();
 	double refractivity = geo->m_material->Refractivity();
 	double ior = geo->m_material->IndexOfRefraction();

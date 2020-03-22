@@ -2,6 +2,7 @@
 
 #include "Primitive.hpp"
 #include "polyroots.hpp"
+#include <math.h>
 
 const double kEpsilon = 0.0001;
 
@@ -32,7 +33,7 @@ Sphere::~Sphere()
 
 bool Sphere::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const
 {
-    glm::vec3 diff = ray.A - pos;
+    glm::vec3 diff = ray.A - m_pos;
     glm::vec3 diff_2 = diff * diff;
     double A = ray.B_A_2.x / radius_2 + ray.B_A_2.y / radius_2 + ray.B_A_2.z / radius_2;
     double B = 2.0 * ((ray.B_A.x * diff.x / radius_2) + (ray.B_A.y * diff.y / radius_2) + (ray.B_A.z * diff.z / radius_2));
@@ -46,9 +47,17 @@ bool Sphere::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, 
     }
     t_min = t;
     point = ray.GetPoint(t);
-    normal = 2.0f * (point - pos) / glm::vec3(radius_2, radius_2, radius_2);
+    normal = 2.0f * (point - m_pos) / glm::vec3(radius_2, radius_2, radius_2);
     return true;
 };
+
+glm::vec2 Sphere::GetUVCoordinates(const glm::vec3 &point) const
+{
+    glm::vec3 diff = (point - m_pos) / (float)radius;
+    float u = 0.5 + atan2(diff.x, diff.z) / (2.0 * M_PI);
+    float v = 0.5 + asin(diff.y) / M_PI;
+    return {u, v};
+}
 
 Box::~Box()
 {
@@ -56,8 +65,8 @@ Box::~Box()
 
 bool Box::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const
 {
-    glm::vec3 t0 = (pos - ray.A) / ray.B_A;
-    glm::vec3 t1 = (pos + glm::vec3(size, size, size) - ray.A) / ray.B_A;
+    glm::vec3 t0 = (m_pos - ray.A) / ray.B_A;
+    glm::vec3 t1 = (m_pos + glm::vec3(size, size, size) - ray.A) / ray.B_A;
     double t_min_x = std::min(t0.x, t1.x);
     double t_min_y = std::min(t0.y, t1.y);
     double t_min_z = std::min(t0.z, t1.z);
@@ -67,7 +76,7 @@ bool Box::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm
 
     if (ray.B_A.x == 0)
     {
-        if (ray.A.x > max_co.x || ray.A.x < pos.x)
+        if (ray.A.x > max_co.x || ray.A.x < m_pos.x)
         {
             return false;
         }
@@ -76,7 +85,7 @@ bool Box::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm
     }
     if (ray.B_A.y == 0)
     {
-        if (ray.A.y > max_co.y || ray.A.y < pos.y)
+        if (ray.A.y > max_co.y || ray.A.y < m_pos.y)
         {
             return false;
         }
@@ -85,7 +94,7 @@ bool Box::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm
     }
     if (ray.B_A.z == 0)
     {
-        if (ray.A.z > max_co.z || ray.A.z < pos.z)
+        if (ray.A.z > max_co.z || ray.A.z < m_pos.z)
         {
             return false;
         }
@@ -121,27 +130,27 @@ bool Box::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm
     t_min = t;
     point = ray.GetPoint(t);
     normal = {0, 0, 0};
-    if (std::abs(point.y - pos.y) < kEpsilon)
+    if (std::abs(point.y - m_pos.y) < kEpsilon)
     {
         normal.y--;
     }
-    else if (std::abs(point.y - pos.y - size) < kEpsilon)
+    else if (std::abs(point.y - m_pos.y - size) < kEpsilon)
     {
         normal.y++;
     }
-    if (std::abs(point.x - pos.x) < kEpsilon)
+    if (std::abs(point.x - m_pos.x) < kEpsilon)
     {
         normal.x--;
     }
-    else if (std::abs(point.x - pos.x - size) < kEpsilon)
+    else if (std::abs(point.x - m_pos.x - size) < kEpsilon)
     {
         normal.x++;
     }
-    if (std::abs(point.z - pos.z) < kEpsilon)
+    if (std::abs(point.z - m_pos.z) < kEpsilon)
     {
         normal.z--;
     }
-    else if (std::abs(point.z - pos.z - size) < kEpsilon)
+    else if (std::abs(point.z - m_pos.z - size) < kEpsilon)
     {
         normal.z++;
     }
@@ -154,7 +163,7 @@ Cone::~Cone()
 
 bool Cone::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const
 {
-    glm::vec3 diff = ray.A - pos;
+    glm::vec3 diff = ray.A - m_pos;
     glm::vec3 diff_2 = diff * diff;
     double A = ray.B_A_2.x / size_2 - ray.B_A_2.y / size_2 + ray.B_A_2.z / size_2;
     double B = 2.0 * ((ray.B_A.x * diff.x / size_2) - (ray.B_A.y * diff.y / size_2) + (ray.B_A.z * diff.z / size_2));
@@ -173,7 +182,7 @@ bool Cone::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, gl
     if (t_vals[0] > kEpsilon)
     {
         glm::vec3 p1 = ray.GetPoint(t_vals[0]);
-        if (p1.y < pos.y && p1.y > min_y && t_vals[0] < t_min)
+        if (p1.y < m_pos.y && p1.y > min_y && t_vals[0] < t_min)
         {
             t_min = t_vals[0];
             point = p1;
@@ -183,7 +192,7 @@ bool Cone::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, gl
     if (t_vals[1] > kEpsilon)
     {
         glm::vec3 p2 = ray.GetPoint(t_vals[1]);
-        if (p2.y < pos.y && p2.y > min_y)
+        if (p2.y < m_pos.y && p2.y > min_y)
         {
             if (t_vals[1] < t_min)
             {
@@ -193,7 +202,7 @@ bool Cone::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, gl
             }
         }
     }
-    normal = 2.0f * (point - pos) / (float)size_2;
+    normal = 2.0f * (point - m_pos) / (float)size_2;
     normal.y *= -1.0f;
     return found;
 }
@@ -204,7 +213,7 @@ Cylinder::~Cylinder()
 
 bool Cylinder::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const
 {
-    glm::vec3 diff = ray.A - pos;
+    glm::vec3 diff = ray.A - m_pos;
     glm::vec3 diff_2 = diff * diff;
     double A = ray.B_A_2.x / radius_2 + ray.B_A_2.z / radius_2;
     double B = 2.0 * ((ray.B_A.x * diff.x / radius_2) + (ray.B_A.z * diff.z / radius_2));
@@ -239,7 +248,7 @@ bool Cylinder::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal
             t_min = t_vals[1];
         }
     }
-    normal = 2.0f * (point - pos) / (float)radius_2;
+    normal = 2.0f * (point - m_pos) / (float)radius_2;
     normal.y *= 0;
     return found;
 }

@@ -513,7 +513,7 @@ extern "C" int gr_texture_cmd(lua_State *L)
   gr_texture_ud *data = (gr_texture_ud *)lua_newuserdata(L, sizeof(gr_texture_ud));
   data->texture = 0;
 
-  const char *filename = luaL_checkstring(L, 2);
+  const char *filename = luaL_checkstring(L, 1);
 
   data->texture = new Texture(Image::loadPng(filename));
 
