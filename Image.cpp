@@ -129,6 +129,33 @@ bool Image::savePng(const std::string &filename) const
   return true;
 }
 
+Image Image::loadPng(const std::string &filename)
+{
+  std::vector<unsigned char> img;
+  unsigned width, height;
+
+  unsigned error = lodepng::decode(img, width, height, filename);
+  if (error)
+  {
+    std::cout << "Decoder error [" << filename << "] " << error << ": " << lodepng_error_text(error) << std::endl;
+  }
+
+  uint w = (uint)width;
+  uint h = (uint)height;
+
+  // data include RGBARGBA...
+  Image image(w, h);
+  for (uint i = 0; i < h; ++i)
+  {
+    for (uint j = 0; j < w; ++j)
+      for (uint col = 0; col < 3; ++col)
+      {
+        image(j, i, col) = ((double)img[4 * (i * h + j) + col]) / 255.0;
+      }
+  }
+  return image;
+}
+
 //---------------------------------------------------------------------------------------
 const double *Image::data() const
 {
