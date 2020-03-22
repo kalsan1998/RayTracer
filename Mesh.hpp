@@ -34,7 +34,7 @@ private:
 	std::vector<glm::vec3> m_vertices;
 	std::vector<Triangle> m_faces;
 
-	Box *bounding_volume;
-	glm::mat4 transform;
-	glm::mat3 norm_transform;
+	Box *m_bounding_volume;
+	glm::mat4 m_transform;
+	glm::mat3 m_norm_transform;
 };

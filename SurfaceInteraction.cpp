@@ -52,16 +52,17 @@ glm::vec3 Phong(
     const glm::vec3 &ambient,
     Material *material)
 {
-    glm::vec3 col = ambient;
+    glm::vec3 object_color = material->Diffuse(); // + texture_color;
+    glm::vec3 col = ambient * object_color;
     for (Light *light : lights)
     {
-        glm::vec3 norm_pos = glm::normalize(light->position - point);
         double l = LightReached(root, Ray(point, light->position), glm::mat4());
         if (!l)
         {
             continue;
         }
-        glm::vec3 diffuse = material->Diffuse() * std::max(glm::dot(norm_pos, norm), 0.0f);
+        glm::vec3 norm_pos = glm::normalize(light->position - point);
+        glm::vec3 diffuse = object_color * std::max(glm::dot(norm_pos, norm), 0.0f);
         glm::vec3 specular = material->Specular() * pow(std::max(glm::dot(norm_pos, reflect), 0.0f), material->Shininess());
         double dist = glm::distance(light->position, point);
         double attenuation = light->falloff[0] + (light->falloff[1] * dist) + (light->falloff[2] * dist * dist);

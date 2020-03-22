@@ -45,7 +45,7 @@ Mesh::Mesh(const std::string &fname)
 	}
 	glm::vec3 min = glm::vec3(min_x, min_y, min_z);
 	glm::vec3 max = glm::vec3(max_x, max_y, max_z);
-	bounding_volume = new Box(glm::vec3(0, 0, 0), 1.0);
+	m_bounding_volume = new Box(glm::vec3(0, 0, 0), 1.0);
 	if (max_x == min_x)
 	{
 		max_x += 0.001;
@@ -61,23 +61,23 @@ Mesh::Mesh(const std::string &fname)
 	glm::vec3 scale_p = glm::vec3(max_x - min_x, max_y - min_y, max_z - min_z);
 	glm::mat4 T = glm::scale(glm::mat4(), scale_p);
 	T = glm::translate(glm::mat4(), min) * T;
-	norm_transform = glm::transpose(glm::inverse(glm::mat3(T)));
-	transform = glm::inverse(T);
+	m_norm_transform = glm::transpose(glm::inverse(glm::mat3(T)));
+	m_transform = glm::inverse(T);
 }
 
 Mesh::~Mesh()
 {
-	delete bounding_volume;
+	delete m_bounding_volume;
 }
 
 bool Mesh::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const
 {
-	const Ray scale_ray = Ray(glm::vec3(transform * glm::vec4(ray.A, 1.0f)),
-							  glm::vec3(transform * glm::vec4(ray.B, 1.0f)));
+	const Ray scale_ray = Ray(glm::vec3(m_transform * glm::vec4(ray.A, 1.0f)),
+							  glm::vec3(m_transform * glm::vec4(ray.B, 1.0f)));
 	double t_m = t_min;
 	// Note this will make us ignore the entire object if the bounding box is close to or behind the
 	// ray origin. This is okay with me.
-	if (!bounding_volume->DoesRayIntersect(scale_ray, t_m, normal, point))
+	if (!m_bounding_volume->DoesRayIntersect(scale_ray, t_m, normal, point))
 	{
 		return false;
 	}

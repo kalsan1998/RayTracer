@@ -56,6 +56,7 @@
 #include "Material.hpp"
 #include "PhongMaterial.hpp"
 #include "RayTracer.hpp"
+#include "Texture.hpp"
 
 typedef std::map<std::string, Mesh *> MeshMap;
 static MeshMap mesh_map;
@@ -110,6 +111,13 @@ struct gr_node_ud
 struct gr_material_ud
 {
   Material *material;
+};
+
+// The "userdata" type for a texture. Objects of this type will be
+// allocated by Lua to represent textures.
+struct gr_texture_ud
+{
+  Texture *texture;
 };
 
 // The "userdata" type for a light. Objects of this type will be
@@ -446,7 +454,7 @@ extern "C" int gr_material_cmd(lua_State *L)
   return 1;
 }
 
-// Create a Material
+// Create a Reflecting Material
 extern "C" int gr_material_refl_cmd(lua_State *L)
 {
   GRLUA_DEBUG_CALL;
@@ -471,7 +479,7 @@ extern "C" int gr_material_refl_cmd(lua_State *L)
   return 1;
 }
 
-// Create a Material
+// Create a Refracting Material
 extern "C" int gr_material_refr_cmd(lua_State *L)
 {
   GRLUA_DEBUG_CALL;
@@ -492,6 +500,24 @@ extern "C" int gr_material_refr_cmd(lua_State *L)
                                           shininess, refractivity, ior);
 
   luaL_newmetatable(L, "gr.material");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+// Create a Texture
+extern "C" int gr_texture_cmd(lua_State *L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_texture_ud *data = (gr_texture_ud *)lua_newuserdata(L, sizeof(gr_texture_ud));
+  data->texture = 0;
+
+  const char *filename = luaL_checkstring(L, 2);
+
+  data->texture = new Texture(Image::loadPng(filename));
+
+  luaL_newmetatable(L, "gr.texture");
   lua_setmetatable(L, -2);
 
   return 1;
@@ -535,6 +561,28 @@ extern "C" int gr_node_set_material_cmd(lua_State *L)
   Material *material = matdata->material;
 
   self->setMaterial(material);
+
+  return 0;
+}
+
+// Set a node's Texture
+extern "C" int gr_node_set_texture_cmd(lua_State *L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_node_ud *selfdata = (gr_node_ud *)luaL_checkudata(L, 1, "gr.node");
+  luaL_argcheck(L, selfdata != 0, 1, "Node expected");
+
+  GeometryNode *self = dynamic_cast<GeometryNode *>(selfdata->node);
+
+  luaL_argcheck(L, self != 0, 1, "Geometry node expected");
+
+  gr_texture_ud *textdata = (gr_texture_ud *)luaL_checkudata(L, 2, "gr.texture");
+  luaL_argcheck(L, textdata != 0, 2, "Texture expected");
+
+  Texture *texture = textdata->texture;
+
+  self->setTexture(texture);
 
   return 0;
 }
@@ -637,6 +685,7 @@ static const luaL_Reg grlib_functions[] = {
     {"material", gr_material_cmd},
     {"material_refl", gr_material_refl_cmd},
     {"material_refr", gr_material_refr_cmd},
+    {"texture", gr_texture_cmd},
     {"cube", gr_cube_cmd},
     {"cone", gr_cone_cmd},
     {"cylinder", gr_cylinder_cmd},
@@ -664,6 +713,7 @@ static const luaL_Reg grlib_node_methods[] = {
     {"__gc", gr_node_gc_cmd},
     {"add_child", gr_node_add_child_cmd},
     {"set_material", gr_node_set_material_cmd},
+    {"set_texture", gr_node_set_texture_cmd},
     {"scale", gr_node_scale_cmd},
     {"rotate", gr_node_rotate_cmd},
     {"translate", gr_node_translate_cmd},
