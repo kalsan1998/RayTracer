@@ -566,7 +566,7 @@ extern "C" int gr_node_set_material_cmd(lua_State *L)
 }
 
 // Set a node's Texture
-extern "C" int gr_node_set_texture_cmd(lua_State *L)
+extern "C" int gr_node_add_texture_cmd(lua_State *L)
 {
   GRLUA_DEBUG_CALL;
 
@@ -582,7 +582,7 @@ extern "C" int gr_node_set_texture_cmd(lua_State *L)
 
   Texture *texture = textdata->texture;
 
-  self->setTexture(texture);
+  self->addTexture(texture);
 
   return 0;
 }
@@ -713,7 +713,7 @@ static const luaL_Reg grlib_node_methods[] = {
     {"__gc", gr_node_gc_cmd},
     {"add_child", gr_node_add_child_cmd},
     {"set_material", gr_node_set_material_cmd},
-    {"set_texture", gr_node_set_texture_cmd},
+    {"add_texture", gr_node_add_texture_cmd},
     {"scale", gr_node_scale_cmd},
     {"rotate", gr_node_rotate_cmd},
     {"translate", gr_node_translate_cmd},

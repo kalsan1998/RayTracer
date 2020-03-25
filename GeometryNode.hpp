@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "SceneNode.hpp"
 #include "Primitive.hpp"
 
@@ -13,10 +15,12 @@ public:
 				 Material *mat = nullptr);
 
 	void setMaterial(Material *material);
-	void setTexture(Texture *texture);
+	void addTexture(Texture *texture);
+
+	glm::vec3 PointColor(const glm::vec2 &uv) const;
 
 	Material *m_material;
-	Texture *m_texture;
+	std::vector<Texture *> m_textures;
 
 	Primitive *m_primitive;
 };

@@ -4,6 +4,8 @@
 #include "polyroots.hpp"
 #include <math.h>
 
+#include <glm/ext.hpp>
+
 const double kEpsilon = 0.0001;
 
 double MinT(double *t_vals)
@@ -50,7 +52,7 @@ bool Sphere::RayTest(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3
     diff = (point - m_pos) / (float)radius;
     float u = 0.5 + atan2(diff.x, diff.z) / (2.0 * M_PI);
     float v = 0.5 + asin(diff.y) / M_PI;
-    uv = glm::vec2(u, v);
+    uv = glm::vec2(u, -v);
     normal = 2.0f * (point - m_pos) / glm::vec3(radius_2, radius_2, radius_2);
     return true;
 };
@@ -126,30 +128,56 @@ bool Box::RayTest(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &p
     t_min = t;
     point = ray.GetPoint(t);
     normal = {0, 0, 0};
-    if (std::abs(point.y - m_pos.y) < kEpsilon)
+    double u;
+    double v;
+    glm::vec3 diff = point - m_pos;
+    diff.x = std::abs(diff.x);
+    diff.y = std::abs(diff.y);
+    diff.z = std::abs(diff.z);
+
+    if (diff.y < kEpsilon)
     {
+        // bottom face
         normal.y--;
+        u = (size + diff.x) / (4.0 * size);
+        v = (2.0 * size + diff.z) / (4.0 * size);
     }
-    else if (std::abs(point.y - m_pos.y - size) < kEpsilon)
+    else if (size - diff.y < kEpsilon)
     {
+        // top face
         normal.y++;
+        u = (size + diff.x) / (4.0 * size);
+        v = (size - diff.z) / (4.0 * size);
     }
-    if (std::abs(point.x - m_pos.x) < kEpsilon)
+    if (diff.x < kEpsilon)
     {
+        // left face
         normal.x--;
+        u = (size - diff.z) / (4.0 * size);
+        v = (2.0 * size - diff.y) / (4.0 * size);
     }
-    else if (std::abs(point.x - m_pos.x - size) < kEpsilon)
+    else if (size - diff.x < kEpsilon)
     {
+        // right face
         normal.x++;
+        u = (2.0 * size + diff.z) / (4.0 * size);
+        v = (2.0 * size - diff.y) / (4.0 * size);
     }
-    if (std::abs(point.z - m_pos.z) < kEpsilon)
+    if (diff.z < kEpsilon)
     {
+        // front face
         normal.z--;
+        u = (size + diff.x) / (4.0 * size);
+        v = (2.0 * size - diff.y) / (4.0 * size);
     }
-    else if (std::abs(point.z - m_pos.z - size) < kEpsilon)
+    else if (size - diff.z < kEpsilon)
     {
+        // back face
         normal.z++;
+        u = (3 * size + diff.x) / (4.0 * size);
+        v = (2.0 * size - diff.y) / (4.0 * size);
     }
+    uv = {u, v};
     return true;
 }
 
@@ -244,6 +272,10 @@ bool Cylinder::RayTest(const Ray &ray, double &t_min, glm::vec3 &normal, glm::ve
             t_min = t_vals[1];
         }
     }
+    diff = (point - m_pos) / (float)radius;
+    float u = 0.5 + atan2(diff.x, diff.z) / (2.0 * M_PI);
+    float v = (max_y - point.y) / height;
+    uv = glm::vec2(u, v);
     normal = 2.0f * (point - m_pos) / (float)radius_2;
     normal.y *= 0;
     return found;

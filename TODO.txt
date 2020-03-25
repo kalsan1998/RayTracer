@@ -1,6 +1,10 @@
-DODOs:
+TODOs:
 
-Make martini
+-- Texture mapping cones
+-- OBJ file advanced parsing: materials
+-- Make martini
+
+
 
 -- Optimization: Don't calculate normal and uv in intersection function. For checking shadows we
 don't need this.

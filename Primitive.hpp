@@ -66,13 +66,14 @@ class Cylinder : public Primitive
 public:
   Cylinder() : Cylinder({0, 0, 0}, 1, 0.5) {}
   Cylinder(const glm::vec3 &pos, double height, double radius)
-      : m_pos(pos), radius(radius), radius_2(radius * radius),
-        min_y(pos.y - height), max_y(pos.y + height) {}
+      : m_pos(pos), height(height), radius(radius), radius_2(radius * radius),
+        min_y(pos.y - height / 2.0), max_y(pos.y + height / 2.0) {}
   virtual ~Cylinder();
   bool RayTest(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point, glm::vec2 &uv) const override;
 
 private:
   glm::vec3 m_pos;
+  double height;
   double radius;
   double radius_2;
   double min_y;

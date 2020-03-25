@@ -7,7 +7,7 @@
 //---------------------------------------------------------------------------------------
 GeometryNode::GeometryNode(
 	const std::string &name, Primitive *prim, Material *mat)
-	: SceneNode(name), m_material(mat), m_primitive(prim), m_texture(nullptr)
+	: SceneNode(name), m_material(mat), m_primitive(prim), m_textures()
 {
 	if (!m_material)
 	{
@@ -32,7 +32,17 @@ void GeometryNode::setMaterial(Material *mat)
 	m_material = mat;
 }
 
-void GeometryNode::setTexture(Texture *text)
+glm::vec3 GeometryNode::PointColor(const glm::vec2 &uv) const
 {
-	m_texture = text;
+	glm::vec3 col = m_material->Diffuse();
+	for (auto *text : m_textures)
+	{
+		col += text->GetColor(uv);
+	}
+	return col;
+}
+
+void GeometryNode::addTexture(Texture *text)
+{
+	m_textures.push_back(text);
 }
