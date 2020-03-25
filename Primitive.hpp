@@ -11,8 +11,7 @@ public:
   virtual ~Primitive();
   // Returns true if ray intersects with a t-val less than t_min.
   // Updates normal, t_min, and point accordingly.
-  virtual bool DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const { return 0; }
-  virtual glm::vec2 GetUVCoordinates(const glm::vec3 &point) const { return {0.0, 0.0}; }
+  virtual bool RayTest(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point, glm::vec2 &uv) const { return 0; }
 };
 
 class Sphere : public Primitive
@@ -22,8 +21,7 @@ public:
   Sphere(const glm::vec3 &pos, double radius)
       : m_pos(pos), radius(radius), radius_2(radius * radius) {}
   virtual ~Sphere();
-  bool DoesRayIntersect(const Ray &rayy, double &t_min, glm::vec3 &normal, glm::vec3 &point) const override;
-  glm::vec2 GetUVCoordinates(const glm::vec3 &point) const override;
+  bool RayTest(const Ray &rayy, double &t_min, glm::vec3 &normal, glm::vec3 &point, glm::vec2 &uv) const override;
 
 private:
   glm::vec3 m_pos;
@@ -38,7 +36,7 @@ public:
   Box(const glm::vec3 &pos, double size)
       : m_pos(pos), size(size), max_co(pos + (float)size) {}
   virtual ~Box();
-  bool DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const override;
+  bool RayTest(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point, glm::vec2 &uv) const override;
 
 private:
   glm::vec3 m_pos;
@@ -54,7 +52,7 @@ public:
       : m_pos(pos), size(size), min_y(pos.y - size), size_2(size * size) {}
   virtual ~Cone();
 
-  bool DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const override;
+  bool RayTest(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point, glm::vec2 &uv) const override;
 
 private:
   glm::vec3 m_pos;
@@ -71,7 +69,7 @@ public:
       : m_pos(pos), radius(radius), radius_2(radius * radius),
         min_y(pos.y - height), max_y(pos.y + height) {}
   virtual ~Cylinder();
-  bool DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const override;
+  bool RayTest(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point, glm::vec2 &uv) const override;
 
 private:
   glm::vec3 m_pos;

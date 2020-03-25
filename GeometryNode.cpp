@@ -7,7 +7,7 @@
 //---------------------------------------------------------------------------------------
 GeometryNode::GeometryNode(
 	const std::string &name, Primitive *prim, Material *mat)
-	: SceneNode(name), m_material(mat), m_primitive(prim)
+	: SceneNode(name), m_material(mat), m_primitive(prim), m_texture(nullptr)
 {
 	if (!m_material)
 	{

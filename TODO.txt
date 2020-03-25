@@ -18,12 +18,3 @@ t_val check to check that both t vals were greater than 0.001 to prevent random 
 
 -- Mesh does not cast shadow on itself. This happened because the intersection for boxes only consider
 the min t val, which could be behind the eye.
-
-
-Completed TODOs:
---Primitives return boolean if hit. Also determines the point. These t_val checks are getting dumb.
-Tests:
-cone_test at deg > 70 
-refractivity test
-nonhier.lua
-cylinder test upright

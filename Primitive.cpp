@@ -31,7 +31,7 @@ Sphere::~Sphere()
 {
 }
 
-bool Sphere::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const
+bool Sphere::RayTest(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point, glm::vec2 &uv) const
 {
     glm::vec3 diff = ray.A - m_pos;
     glm::vec3 diff_2 = diff * diff;
@@ -47,23 +47,19 @@ bool Sphere::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, 
     }
     t_min = t;
     point = ray.GetPoint(t);
+    diff = (point - m_pos) / (float)radius;
+    float u = 0.5 + atan2(diff.x, diff.z) / (2.0 * M_PI);
+    float v = 0.5 + asin(diff.y) / M_PI;
+    uv = glm::vec2(u, v);
     normal = 2.0f * (point - m_pos) / glm::vec3(radius_2, radius_2, radius_2);
     return true;
 };
-
-glm::vec2 Sphere::GetUVCoordinates(const glm::vec3 &point) const
-{
-    glm::vec3 diff = (point - m_pos) / (float)radius;
-    float u = 0.5 + atan2(diff.x, diff.z) / (2.0 * M_PI);
-    float v = 0.5 + asin(diff.y) / M_PI;
-    return {u, v};
-}
 
 Box::~Box()
 {
 }
 
-bool Box::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const
+bool Box::RayTest(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point, glm::vec2 &uv) const
 {
     glm::vec3 t0 = (m_pos - ray.A) / ray.B_A;
     glm::vec3 t1 = (m_pos + glm::vec3(size, size, size) - ray.A) / ray.B_A;
@@ -161,7 +157,7 @@ Cone::~Cone()
 {
 }
 
-bool Cone::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const
+bool Cone::RayTest(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point, glm::vec2 &uv) const
 {
     glm::vec3 diff = ray.A - m_pos;
     glm::vec3 diff_2 = diff * diff;
@@ -211,7 +207,7 @@ Cylinder::~Cylinder()
 {
 }
 
-bool Cylinder::DoesRayIntersect(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point) const
+bool Cylinder::RayTest(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point, glm::vec2 &uv) const
 {
     glm::vec3 diff = ray.A - m_pos;
     glm::vec3 diff_2 = diff * diff;

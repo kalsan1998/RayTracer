@@ -89,11 +89,11 @@ bool Traverse(
 							  glm::vec3(inv_model * glm::vec4(ray.B, 1.0f)));
 	glm::vec3 normal;
 	glm::vec3 point;
-	if (!geo->m_primitive->DoesRayIntersect(ray_trans, t_min, normal, point))
+	glm::vec2 uv;
+	if (!geo->m_primitive->RayTest(ray_trans, t_min, normal, point, uv))
 	{
 		return did_hit;
 	}
-	glm::vec2 uv = geo->m_primitive->GetUVCoordinates(point);
 	glm::vec3 texture_color = !geo->m_texture ? glm::vec3(0) : geo->m_texture->GetColor(uv);
 	glm::vec3 world_point = glm::vec3(model * glm::vec4(point, 1.0f));
 	glm::vec3 kd = geo->m_material->Diffuse();
