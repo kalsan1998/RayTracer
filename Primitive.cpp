@@ -226,6 +226,14 @@ bool Cone::RayTest(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &
             }
         }
     }
+    diff = (point - m_pos);
+    float sign = diff.z < 0 ? -1.0f : 1.0f;
+    double dist = glm::length(diff) / (sqrt(2.) * size);
+    float u = atan2(diff.x, diff.z) / (2.0 * M_PI);
+    float v = sqrt(dist * dist - u * u) * sign;
+    u += 0.5;
+    uv = {u, v};
+
     normal = 2.0f * (point - m_pos) / (float)size_2;
     normal.y *= -1.0f;
     return found;

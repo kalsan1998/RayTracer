@@ -1,6 +1,5 @@
 TODOs:
 
--- Texture mapping cones
 -- OBJ file advanced parsing: materials
 -- Make martini
 
