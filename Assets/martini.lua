@@ -1,11 +1,13 @@
-brown = gr.material({0.3, 0.1, 0.1}, {0.0, 0.0, 0.0}, 0)
-glass = gr.material_refr({0.3,0.3,0.3}, {0.5,0.5,0.5}, 50, 0.7, 1.12)
+white = gr.material({0.8, 0.8, 0.8}, {0.0, 0.0, 0.0}, 0)
+glass = gr.material_refr({0.6,0.6,0.6}, {0.5,0.5,0.5}, 50, 0.7, 1.05)
+wine = gr.material_refr({0.42,0.1,0.08}, {0,0,0}, 0, 0.4, 1.3)
+
 
 wallpaper_text = gr.texture('./textures/striped_wallpaper.png')
 ceiling_text = gr.texture('./textures/yellow_wallpaper.png')
 
 hardwood_text = gr.texture('./textures/hardwood.png')
-hardwood_mat = gr.material_refl({0.1,0.1,0.1}, {0,0,0}, 0, 0.10)
+hardwood_mat = gr.material_refl({0.0,0.0,0.0}, {0.7,0.7,0.7}, 100, 0.1)
 
 mona = gr.texture('./textures/mona.png')
 
@@ -56,7 +58,6 @@ wall_b:translate(0,5,-15)
 -- wall_t:rotate('X', 180)
 -- wall_t:translate(0,15,0)
 
--- painting
 p = gr.node('p')
 painting = gr.mesh( 'painting', './objects/painting.obj' )
 painting:add_texture(mona)
@@ -69,22 +70,35 @@ scene:add_child(painting)
 cup = gr.cylinder('cup')
 scene:add_child(cup)
 cup:set_material(glass)
-cup:scale(2,4,2)
-cup:translate(-2, 1, 0)
+cup:scale(2,3,2)
+cup:translate(-2, 1.5, 0)
+
+drink = gr.cylinder('wine')
+cup:add_child(drink)
+drink:scale(0.85, 0.8, 0.85)
+drink:translate(0,-0.1,0)
+drink:set_material(wine)
+
+drink_t = gr.sphere('wine_t')
+drink:add_child(drink_t)
+drink_t:scale(0.5,0.001,0.5)
+drink_t:set_material(wine)
+drink_t:translate(0,0.5,0)
+
 
 straw = gr.cylinder('straw')
 straw:scale(0.2,4,0.2)
-straw:set_material(brown)
+straw:set_material(white)
 straw:rotate('Z', 25)
-straw:translate(-2.75, 2.5, 1)
+straw:translate(-2.6, 2.5, 0)
 scene:add_child(straw)
 
 scene:rotate('X', -5)
 
 
 -- The lights
-l1 = gr.light({0,10,-8}, {0.6, 0.6, 0.6}, {1, 0, 0})
+l1 = gr.light({-10,10,-8}, {0.6, 0.6, 0.6}, {1, 0, 0})
 
-gr.render(scene, './images/martini.png', 512, 512, 
+gr.render(scene, './images/martini.png', 2048, 2048, 
 	  {0, 2, -14}, {0, 0, 1}, {0, 1, 0}, 50,
 	  {0.2, 0.2, 0.2}, {l1})
