@@ -4,13 +4,13 @@
 #include "GeometryNode.hpp"
 #include <glm/ext.hpp>
 
-double LightReached(const SceneNode *node, const Ray &ray, const glm::mat4 &m)
+double LightReached(const SceneNode *node, const Ray &ray, const glm::mat4 &m, const double &t_min)
 {
     double reached = 1.0;
     glm::mat4 model = m * node->trans;
     for (SceneNode *child : node->children)
     {
-        double l = LightReached(child, ray, model);
+        double l = LightReached(child, ray, model, t_min);
         if (l)
         {
             reached *= l;
@@ -32,8 +32,8 @@ double LightReached(const SceneNode *node, const Ray &ray, const glm::mat4 &m)
     glm::vec3 normal;
     glm::vec3 point;
     glm::vec2 uv;
-    double t_min = std::numeric_limits<double>::infinity();
-    if (!geo->m_primitive->RayTest(ray_trans, t_min, normal, point, uv))
+    double t_mint = t_min;
+    if (!geo->m_primitive->RayTest(ray_trans, t_mint, normal, point, uv))
     {
         return reached;
     }
@@ -57,7 +57,7 @@ glm::vec3 Phong(
     glm::vec3 col = ambient * object_color;
     for (Light *light : lights)
     {
-        double l = LightReached(root, Ray(point, light->position), glm::mat4());
+        double l = LightReached(root, Ray(point, light->position), glm::mat4(), 1.0);
         if (!l)
         {
             continue;

@@ -20,6 +20,7 @@ epsilon check.
 -- Full cylinder and shadows weren't rendered. Changed min hit count to 1 from 2. Also had to change
 t_val check to check that both t vals were greater than 0.001 to prevent random shadows.
 
-
 -- Mesh does not cast shadow on itself. This happened because the intersection for boxes only consider
 the min t val, which could be behind the eye.
+
+-- Shadows were being cast when object was behind the light source

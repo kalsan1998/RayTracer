@@ -1,10 +1,11 @@
 brown = gr.material({0.3, 0.1, 0.1}, {0.0, 0.0, 0.0}, 0)
-water = gr.material_refr({0,0,0}, {0,0,0}, 0, 1.0, 1.3)
+glass = gr.material_refr({0.3,0.3,0.3}, {0.5,0.5,0.5}, 50, 0.7, 1.12)
 
 wallpaper_text = gr.texture('./textures/striped_wallpaper.png')
+ceiling_text = gr.texture('./textures/yellow_wallpaper.png')
 
 hardwood_text = gr.texture('./textures/hardwood.png')
-hardwood_mat = gr.material_refl({0,0,0}, {0,0,0}, 0.5, 0.1)
+hardwood_mat = gr.material_refl({0.1,0.1,0.1}, {0,0,0}, 0, 0.10)
 
 mona = gr.texture('./textures/mona.png')
 
@@ -15,7 +16,7 @@ table = gr.mesh( 'table', './objects/plane.obj' )
 scene:add_child(table)
 table:add_texture(hardwood_text)
 table:set_material(hardwood_mat)
-table:scale(10, 10, 10)
+table:scale(15, 15, 15)
 
 -- the wall
 wall = gr.mesh( 'wall', './objects/plane.obj' )
@@ -24,6 +25,36 @@ wall:add_texture(wallpaper_text)
 wall:scale(15, 15, 15)
 wall:rotate('X', -90)
 wall:translate(0,5,15)
+
+wall_l = gr.mesh( 'wall_l', './objects/plane.obj' )
+scene:add_child(wall_l)
+wall_l:add_texture(wallpaper_text)
+wall_l:scale(15, 15, 15)
+wall_l:rotate('X', -90)
+wall_l:rotate('Y', 90)
+wall_l:translate(15,5,0)
+
+wall_r = gr.mesh( 'wall_r', './objects/plane.obj' )
+scene:add_child(wall_r)
+wall_r:add_texture(wallpaper_text)
+wall_r:scale(15, 15, 15)
+wall_r:rotate('X', -90)
+wall_r:rotate('Y', -90)
+wall_r:translate(-15,5,0)
+
+wall_b = gr.mesh( 'wall_b', './objects/plane.obj' )
+scene:add_child(wall_b)
+wall_b:add_texture(wallpaper_text)
+wall_b:scale(15, 30, 15)
+wall_b:rotate('X', 90)
+wall_b:translate(0,5,-15)
+
+-- wall_t = gr.mesh( 'wall_t', './objects/plane.obj' )
+-- scene:add_child(wall_t)
+-- wall_t:add_texture(ceiling_text)
+-- wall_t:scale(15, 15, 15)
+-- wall_t:rotate('X', 180)
+-- wall_t:translate(0,15,0)
 
 -- painting
 p = gr.node('p')
@@ -37,7 +68,7 @@ scene:add_child(painting)
 
 cup = gr.cylinder('cup')
 scene:add_child(cup)
-cup:set_material(water)
+cup:set_material(glass)
 cup:scale(2,4,2)
 cup:translate(-2, 1, 0)
 
@@ -45,15 +76,15 @@ straw = gr.cylinder('straw')
 straw:scale(0.2,4,0.2)
 straw:set_material(brown)
 straw:rotate('Z', 25)
-straw:translate(-2.75, 3, 1)
+straw:translate(-2.75, 2.5, 1)
 scene:add_child(straw)
 
-scene:rotate('X', -10)
+scene:rotate('X', -5)
 
 
 -- The lights
-l1 = gr.light({100,100,-200}, {0.8, 0.8, 0.8}, {1, 0, 0})
+l1 = gr.light({0,10,-8}, {0.6, 0.6, 0.6}, {1, 0, 0})
 
-gr.render(scene, './images/martini.png', 256, 256, 
-	  {0, 2, -15,}, {0, 0, 1}, {0, 1, 0}, 50,
+gr.render(scene, './images/martini.png', 512, 512, 
+	  {0, 2, -14}, {0, 0, 1}, {0, 1, 0}, 50,
 	  {0.2, 0.2, 0.2}, {l1})

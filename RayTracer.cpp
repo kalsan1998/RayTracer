@@ -14,6 +14,7 @@
 const int THREAD_COUNT = 12;
 const int ROWS_PER_THREAD = 10;
 
+const int MAX_HITS = 100;
 const double MAX_COLOR_DIFF = 0.1;
 
 Ray::Ray(const glm::vec3 &A, const glm::vec3 &B)
@@ -72,7 +73,6 @@ bool Traverse(
 	int hits)
 {
 	const glm::mat4 model = trans * node->trans;
-
 	bool did_hit = false;
 	for (SceneNode *child : node->children)
 	{
@@ -108,10 +108,11 @@ bool Traverse(
 	double ior = geo->m_material->IndexOfRefraction();
 	double refl_col[3] = {0.1, 0.1, 0.5};
 	double refr_col[3] = {0.1, 0.1, 0.5};
-	if (refractivity && hits < 5)
+	Ray refract_ray(glm::vec3(0), glm::vec3(0));
+	if (refractivity && hits < MAX_HITS)
 	{
 		double tt_min = std::numeric_limits<double>::max();
-		Ray refract_ray = CalculateRefraction(world_point, norm_ray, normal, ior, reflectivity);
+		refract_ray = CalculateRefraction(world_point, norm_ray, normal, ior, reflectivity);
 		reflectivity *= refractivity;
 		refractivity -= reflectivity;
 		if (refract_ray.B != world_point)
@@ -119,7 +120,7 @@ bool Traverse(
 			Traverse(root, root, refract_ray, lights, ambient, refr_col[0], refr_col[1], refr_col[2], tt_min, glm::mat4(), hits + 1);
 		}
 	}
-	if (reflectivity && hits < 5)
+	if (reflectivity && hits < MAX_HITS)
 	{
 		double tt_min = std::numeric_limits<double>::max();
 		Ray reflect_ray(world_point, world_point + reflect);
