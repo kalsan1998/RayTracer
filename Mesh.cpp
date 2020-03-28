@@ -56,6 +56,10 @@ std::vector<int> FaceTermToInt(std::string &s)
 	{
 		return {a, -1, -1};
 	}
+	else if (spl.size() == 2)
+	{
+		return {a, std::stoi(spl[1]), -1};
+	}
 	if (spl[1] != "")
 	{
 		return {a, std::stoi(spl[1]), std::stoi(spl[2])};
@@ -139,6 +143,7 @@ Mesh::Mesh(const std::string &fname)
 			iss >> nx >> ny >> nz;
 			m_normals.push_back(glm::vec3(nx, ny, nz));
 		}
+		code = "";
 	}
 	glm::vec3 min = glm::vec3(min_x, min_y, min_z);
 	glm::vec3 max = glm::vec3(max_x, max_y, max_z);

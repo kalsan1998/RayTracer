@@ -1,8 +1,10 @@
 TODOs:
 
+-- Make model scene template
+-- Photon mapping: Caustics and radiosity
+-- Depth of field
+-- Soft shadows
 -- OBJ file advanced parsing: materials
--- Make martini
-
 
 
 -- Optimization: Don't calculate normal and uv in intersection function. For checking shadows we
