@@ -4,25 +4,24 @@
 #include "GeometryNode.hpp"
 #include <glm/ext.hpp>
 
-double LightReached(const SceneNode *node, const Ray &ray, const glm::mat4 &m, const double &t_min)
+double LightReached(const SceneNode *node, const Ray &ray, const glm::mat4 &m, const double &t_min, double reached)
 {
-    double reached = 1.0;
     glm::mat4 model = m * node->trans;
     for (SceneNode *child : node->children)
     {
-        double l = LightReached(child, ray, model, t_min);
-        if (l)
+        double l = LightReached(child, ray, model, t_min, reached);
+        if (!l)
         {
-            reached *= l;
+            return 0.0;
         }
         else
         {
-            return 0.0;
+            reached *= l;
         }
     }
     if (node->m_nodeType != NodeType::GeometryNode)
     {
-        return 1.0;
+        return reached;
     }
     const GeometryNode *geo = static_cast<const GeometryNode *>(node);
     double t_vals[2] = {0.0, 0.0};
@@ -57,8 +56,8 @@ glm::vec3 Phong(
     glm::vec3 col = ambient * object_color;
     for (Light *light : lights)
     {
-        double l = LightReached(root, Ray(point, light->position), glm::mat4(), 1.0);
-        if (!l)
+        double l = LightReached(root, Ray(point, light->position), glm::mat4(), 1.0, 1.0);
+        if (l == 0.0)
         {
             continue;
         }

@@ -14,7 +14,7 @@
 const int THREAD_COUNT = 12;
 const int ROWS_PER_THREAD = 10;
 
-const int MAX_HITS = 100;
+const int MAX_HITS = 5;
 const double MAX_COLOR_DIFF = 0.1;
 
 Ray::Ray(const glm::vec3 &A, const glm::vec3 &B)

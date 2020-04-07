@@ -1,5 +1,6 @@
 white = gr.material({0.8, 0.8, 0.8}, {0.0, 0.0, 0.0}, 0)
-glass = gr.material_refr({0.6,0.6,0.6}, {0.5,0.5,0.5}, 50, 0.7, 1.05)
+glass = gr.material_refr({0.6,0.6,0.6}, {0.9,0.9,0.9}, 100, 0.7, 1.05)
+-- glass = gr.material({0.7, 1.0, 0.7}, {0.5, 0.7, 0.5}, 25)
 wine = gr.material_refr({0.42,0.1,0.08}, {0,0,0}, 0, 0.4, 1.3)
 
 
@@ -7,7 +8,7 @@ wallpaper_text = gr.texture('./textures/striped_wallpaper.png')
 ceiling_text = gr.texture('./textures/yellow_wallpaper.png')
 
 hardwood_text = gr.texture('./textures/hardwood.png')
-hardwood_mat = gr.material_refl({0.0,0.0,0.0}, {0.7,0.7,0.7}, 100, 0.1)
+hardwood_mat = gr.material_refl({0.0,0.0,0.0}, {0.7,0.7,0.7}, 100, 0.05)
 
 mona = gr.texture('./textures/mona.png')
 
@@ -97,8 +98,8 @@ scene:rotate('X', -5)
 
 
 -- The lights
-l1 = gr.light({-10,10,-8}, {0.6, 0.6, 0.6}, {1, 0, 0})
+l1 = gr.light({0,1,-8}, {0.9, 0.9, 0.9}, {1, 0, 0})
 
-gr.render(scene, './images/martini.png', 2048, 2048, 
-	  {0, 2, -14}, {0, 0, 1}, {0, 1, 0}, 50,
+gr.render(scene, './images/martini.png', 256, 256, 
+	  {-1, 2, -14}, {0, 0, 1}, {0, 1, 0}, 50,
 	  {0.2, 0.2, 0.2}, {l1})
