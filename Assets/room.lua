@@ -4,7 +4,7 @@ green = gr.material({0.08, 0.51, 0.03}, {0.0, 0.0, 0.0}, 0)
 red = gr.material({0.83, 0.07, 0.07}, {0.0, 0.0, 0.0}, 0)
 
 y_mirror = gr.material_refl({0.7,0.7,0.3}, {0.8, 0.8, 0.8}, 25, 0.3)
-glass = gr.material_refr({0.6,0.6,0.6}, {0.9,0.9,0.9}, 25, 0.7, 1.5)
+glass = gr.material_refr({0.6,0.6,0.6}, {0.9,0.9,0.9}, 25, 0.9, 1.5)
 
 -- the floor
 floor = gr.mesh( 'floor', './objects/plane.obj' )
