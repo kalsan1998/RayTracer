@@ -106,8 +106,8 @@ bool Traverse(
 	double reflectivity = geo->m_material->Reflectivity();
 	double refractivity = geo->m_material->Refractivity();
 	double ior = geo->m_material->IndexOfRefraction();
-	double refl_col[3] = {0.1, 0.1, 0.5};
-	double refr_col[3] = {0.1, 0.1, 0.5};
+	double refl_col[3] = {0.0, 0.0, 0.0};
+	double refr_col[3] = {0.0, 0.0, 0.0};
 	Ray refract_ray(glm::vec3(0), glm::vec3(0));
 	if (refractivity && hits < MAX_HITS)
 	{
@@ -161,17 +161,11 @@ void Render_Row(void *data)
 			double g = 0.0;
 			double b = 0.0;
 
-			double p_b = 0.9 * (y + x) / (args->ny + args->nx);
 			glm::vec4 p = {(double)x, (double)y, 0.0, 1.0f};
 			glm::vec3 p_world = glm::vec3(*args->transform * p);
 			Ray ray(*args->eye, p_world);
 			double t_min = std::numeric_limits<double>::max();
-			if (!Traverse(args->root, args->root, ray, *args->lights, *args->ambient, r, g, b, t_min, glm::mat4(), 0))
-			{
-				r = 0.1;
-				g = 0.1;
-				b = 0.1 + p_b;
-			}
+			Traverse(args->root, args->root, ray, *args->lights, *args->ambient, r, g, b, t_min, glm::mat4(), 0);
 			image(x, y, 0) = r;
 			image(x, y, 1) = g;
 			image(x, y, 2) = b;
