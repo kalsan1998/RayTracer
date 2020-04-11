@@ -1,11 +1,12 @@
 TODOs:
 
--- Make model scene template
 -- Photon mapping: Caustics and radiosity
+- https://graphics.stanford.edu/courses/cs348b-00/course8.pdf
+- Emit photons from light. At each surface, either absorb, diffuse, or mirror reflect/transmit.
+
 -- Depth of field
 -- Soft shadows
 -- OBJ file advanced parsing: materials
-
 
 -- Optimization: Don't calculate normal and uv in intersection function. For checking shadows we
 don't need this.
