@@ -9,7 +9,7 @@ class Primitive
 {
 public:
   virtual ~Primitive();
-  // Returns true if ray intersects with a t-val less than t_min.
+  // Returns true if ray intersects with a t-val less than t_min (and t greater than 0)
   // Updates normal, t_min, and point accordingly.
   virtual bool RayTest(const Ray &ray, double &t_min, glm::vec3 &normal, glm::vec3 &point, glm::vec2 &uv) const { return 0; }
 };

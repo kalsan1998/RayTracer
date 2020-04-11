@@ -10,6 +10,7 @@
 #include "GeometryNode.hpp"
 #include "SurfaceInteraction.hpp"
 #include "Texture.hpp"
+#include "PhotonMapping.hpp"
 
 const int THREAD_COUNT = 12;
 const int ROWS_PER_THREAD = 10;
@@ -277,6 +278,11 @@ void Render(
 	const glm::mat4 transform = GetTransform(nx, ny, eye, view, up, fovy);
 	Image pre_image = image;
 
+	PhotonMap global_map;
+	PhotonMap caustic_map;
+
+	MapPhotons(lights, root, &global_map, &caustic_map);
+
 	int n = 0;
 	int p = 100 * THREAD_COUNT * ROWS_PER_THREAD / ny;
 	// Initialize threads
@@ -290,7 +296,7 @@ void Render(
 
 	for (uint y = 0; y < ny; y += (THREAD_COUNT * ROWS_PER_THREAD))
 	{
-		std::cout << "Progress: " << n << "\%\r";
+		std::cout << "Ray Trace Progress: " << n << "\%\r";
 		std::cout.flush();
 		n += p;
 
@@ -306,7 +312,7 @@ void Render(
 			th.join();
 		}
 	}
-	std::cout << "Progress: 100\%" << std::endl;
+	std::cout << "Ray Trace Progress: 100\%" << std::endl;
 
 	n = 0;
 	for (uint y = 0; y < ny; y += (THREAD_COUNT * ROWS_PER_THREAD))
