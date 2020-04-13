@@ -1,8 +1,7 @@
 TODOs:
 
 -- Photon mapping: Caustics and radiosity
-- https://graphics.stanford.edu/courses/cs348b-00/course8.pdf
-- Emit photons from light. At each surface, either absorb, diffuse, or mirror reflect/transmit.
+- Make number of emitted photons scale relative to image resolution?
 
 -- Depth of field
 -- Soft shadows

@@ -7,13 +7,14 @@
 // Photons per light source.
 const uint NUM_PHOTONS = 400000;
 
-const GeometryNode *GetClosestGeometryNode(const SceneNode *node, const Ray &ray, const glm::mat4 trans, double &t_min)
+const GeometryNode *GetClosestIntersection(const SceneNode *node, const Ray &ray, const glm::mat4 trans,
+                                           double &t_min, glm::vec3 &normal, glm::vec3 point)
 {
     const GeometryNode *closest = nullptr;
     const glm::mat4 model = trans * node->trans;
     for (SceneNode *child : node->children)
     {
-        closest = GetClosestGeometryNode(child, ray, model, t_min);
+        closest = GetClosestIntersection(child, ray, model, t_min, normal, point);
     }
     if (node->m_nodeType != NodeType::GeometryNode)
     {
@@ -23,13 +24,15 @@ const GeometryNode *GetClosestGeometryNode(const SceneNode *node, const Ray &ray
     glm::mat4 inv_model = glm::inverse(model);
     const Ray ray_trans = Ray(glm::vec3(inv_model * glm::vec4(ray.A, 1.0f)),
                               glm::vec3(inv_model * glm::vec4(ray.B, 1.0f)));
-    glm::vec3 normal;
-    glm::vec3 point;
     glm::vec2 uv;
-    if (!geo->m_primitive->RayTest(ray_trans, t_min, normal, point, uv))
+    glm::vec3 pp;
+    if (!geo->m_primitive->RayTest(ray_trans, t_min, normal, pp, uv))
     {
         return closest;
     }
+    point = glm::vec3(model * glm::vec4(pp, 1.0f));
+    normal = glm::inverse(glm::transpose(glm::mat3(model))) * normal;
+    normal = glm::normalize(normal);
     return geo;
 }
 
@@ -37,38 +40,51 @@ void EmitPhoton(const SceneNode *root, const Ray &ray, Photon &photon,
                 PhotonMap *global, PhotonMap *caustic)
 {
     double t_min = std::numeric_limits<double>::max();
-    const GeometryNode *surface = GetClosestGeometryNode(root, ray, glm::mat4(), t_min);
+    glm::vec3 world_point;
+    glm::vec3 point;
+    glm::vec3 normal;
+    const GeometryNode *surface = GetClosestIntersection(root, ray, glm::mat4(), t_min, normal, world_point);
     if (!surface)
     {
         return;
     }
     glm::vec3 norm_ray = glm::normalize(ray.B_A);
-    Ray refract_ray(glm::vec3(0), glm::vec3(0));
+    Ray ray_out(glm::vec3(0), glm::vec3(0));
     double reflectivity = surface->m_material->Reflectivity();
     double refractivity = surface->m_material->Refractivity();
     glm::vec3 diffuse = surface->m_material->Diffuse();
     double ior = surface->m_material->IndexOfRefraction();
     if (refractivity)
     {
-        refract_ray = CalculateRefraction(world_point, norm_ray, normal, ior, reflectivity);
+        ray_out = CalculateRefraction(world_point, norm_ray, normal, ior, reflectivity);
         reflectivity *= refractivity;
         refractivity -= reflectivity;
     }
     float P_r = std::max(std::max(diffuse[0], diffuse[1]), diffuse[2]);
-    float P_d = (refractivity + reflectivity) * P_r;
+    float P_d = (1. - refractivity - reflectivity) * P_r;
     float P_refr = refractivity * P_r;
     float P_refl = reflectivity * P_r;
 
     float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    photon.power *= diffuse / P_r;
     if (r < P_refl)
     {
+        // Specular Reflect
+        glm::vec3 reflect = norm_ray - (2.0f * (glm::dot(norm_ray, normal) * normal));
+        ray_out = Ray(world_point, world_point + reflect);
     }
     else if (r < P_refl + P_refr)
     {
+        // Refraction
+        // NOTE: might hit itself
+        // Already calculated refract ray
     }
     else if (r < P_refl + P_refr + P_d)
     {
+        // Diffuse
         photon.caustic = false;
+        glm::vec3 reflect = norm_ray - (2.0f * (glm::dot(norm_ray, normal) * normal));
+        ray_out = Ray(world_point, world_point + reflect);
     }
     else if (!photon.first_surface_hit)
     {
@@ -79,18 +95,7 @@ void EmitPhoton(const SceneNode *root, const Ray &ray, Photon &photon,
         global->insert(photon, world_point);
     }
     photon.first_surface_hit = true;
-    // s = Find closest surface
-    // Russian Roullette:
-    //  if absorb and first_surface_hit
-    //      store in proper maps (check caustic flag)
-    //      return
-    //  first_surface_hit = true
-    //  if specular_transmission:
-    //      NOTE: might hit itself
-    //  else if specular_reflect:
-    //  else (diffuse):
-    //      caustic = false
-    // Emit photon
+    EmitPhoton(root, ray_out, photon, global, caustic);
 }
 
 void MapPhotons(const std::list<Light *> &lights, const SceneNode *root,
@@ -106,6 +111,9 @@ void MapPhotons(const std::list<Light *> &lights, const SceneNode *root,
         double theta = 0.0;
         for (uint i = 0; i < NUM_PHOTONS; ++i)
         {
+            std::cout << "Progress: " << 100. * i / (float)NUM_PHOTONS << "%\r";
+            std::cout.flush();
+
             int x = rand();
             int y = rand();
             int z = rand();
