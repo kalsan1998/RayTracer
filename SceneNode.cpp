@@ -133,9 +133,6 @@ std::ostream &operator<<(std::ostream &os, const SceneNode &node)
 	case NodeType::GeometryNode:
 		os << "GeometryNode";
 		break;
-	case NodeType::JointNode:
-		os << "JointNode";
-		break;
 	}
 	os << ":[";
 

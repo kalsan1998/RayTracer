@@ -51,7 +51,6 @@
 #include "Light.hpp"
 #include "Mesh.hpp"
 #include "GeometryNode.hpp"
-#include "JointNode.hpp"
 #include "Primitive.hpp"
 #include "Material.hpp"
 #include "PhongMaterial.hpp"
@@ -151,32 +150,6 @@ extern "C" int gr_node_cmd(lua_State *L)
 
   const char *name = luaL_checkstring(L, 1);
   data->node = new SceneNode(name);
-
-  luaL_getmetatable(L, "gr.node");
-  lua_setmetatable(L, -2);
-
-  return 1;
-}
-
-// Create a Joint node
-extern "C" int gr_joint_cmd(lua_State *L)
-{
-  GRLUA_DEBUG_CALL;
-
-  gr_node_ud *data = (gr_node_ud *)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
-
-  const char *name = luaL_checkstring(L, 1);
-  JointNode *node = new JointNode(name);
-
-  double x[3], y[3];
-  get_tuple(L, 2, x, 3);
-  get_tuple(L, 3, y, 3);
-
-  node->set_joint_x(x[0], x[1], x[2]);
-  node->set_joint_y(y[0], y[1], y[2]);
-
-  data->node = node;
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -681,7 +654,6 @@ extern "C" int gr_node_gc_cmd(lua_State *L)
 static const luaL_Reg grlib_functions[] = {
     {"node", gr_node_cmd},
     {"sphere", gr_sphere_cmd},
-    {"joint", gr_joint_cmd},
     {"material", gr_material_cmd},
     {"material_refl", gr_material_refl_cmd},
     {"material_refr", gr_material_refr_cmd},
