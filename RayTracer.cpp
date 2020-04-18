@@ -12,7 +12,7 @@
 #include "Texture.hpp"
 #include "PhotonMapping.hpp"
 
-const int THREAD_COUNT = 12;
+const int RENDER_THREAD_COUNT = 12;
 const int ROWS_PER_THREAD = 10;
 
 const int MAX_HITS = 5;
@@ -71,13 +71,15 @@ bool Traverse(
 	double &b,
 	double &t_min,
 	const glm::mat4 &trans,
-	int hits)
+	int hits,
+	const PhotonMap &global_map,
+	const PhotonMap &caustic_map)
 {
 	const glm::mat4 model = trans * node->trans;
 	bool did_hit = false;
 	for (SceneNode *child : node->children)
 	{
-		did_hit |= Traverse(root, child, ray, lights, ambient, r, g, b, t_min, model, hits);
+		did_hit |= Traverse(root, child, ray, lights, ambient, r, g, b, t_min, model, hits, global_map, caustic_map);
 	}
 	if (node->m_nodeType != NodeType::GeometryNode)
 	{
@@ -103,7 +105,7 @@ bool Traverse(
 	normal = glm::normalize(normal);
 	glm::vec3 norm_ray = glm::normalize(ray.B_A);
 	glm::vec3 reflect = norm_ray - (2.0f * (glm::dot(norm_ray, normal) * normal));
-	glm::vec3 phong = Phong(root, lights, normal, norm_ray, reflect, world_point, ambient, object_color, geo->m_material);
+	glm::vec3 phong = Phong(root, lights, normal, norm_ray, reflect, world_point, ambient, object_color, geo->m_material, global_map);
 	double reflectivity = geo->m_material->Reflectivity();
 	double refractivity = geo->m_material->Refractivity();
 	double ior = geo->m_material->IndexOfRefraction();
@@ -118,14 +120,14 @@ bool Traverse(
 		refractivity -= reflectivity;
 		if (refract_ray.B != world_point)
 		{
-			Traverse(root, root, refract_ray, lights, ambient, refr_col[0], refr_col[1], refr_col[2], tt_min, glm::mat4(), hits + 1);
+			Traverse(root, root, refract_ray, lights, ambient, refr_col[0], refr_col[1], refr_col[2], tt_min, glm::mat4(), hits + 1, global_map, caustic_map);
 		}
 	}
 	if (reflectivity && hits < MAX_HITS)
 	{
 		double tt_min = std::numeric_limits<double>::max();
 		Ray reflect_ray(world_point, world_point + reflect);
-		Traverse(root, root, reflect_ray, lights, ambient, refl_col[0], refl_col[1], refl_col[2], tt_min, glm::mat4(), hits + 1);
+		Traverse(root, root, reflect_ray, lights, ambient, refl_col[0], refl_col[1], refl_col[2], tt_min, glm::mat4(), hits + 1, global_map, caustic_map);
 	}
 	double opa = 1.0 - reflectivity - refractivity;
 	r = (refractivity * refr_col[0]) + (reflectivity * refl_col[0]) + (opa * phong[0]);
@@ -147,6 +149,8 @@ struct RowRenderArgs
 	size_t ny;
 	size_t y;
 	Image *post_image; // For anti-aliasing
+	const PhotonMap *global_map;
+	const PhotonMap *caustic_map;
 };
 
 void Render_Row(void *data)
@@ -166,7 +170,7 @@ void Render_Row(void *data)
 			glm::vec3 p_world = glm::vec3(*args->transform * p);
 			Ray ray(*args->eye, p_world);
 			double t_min = std::numeric_limits<double>::max();
-			Traverse(args->root, args->root, ray, *args->lights, *args->ambient, r, g, b, t_min, glm::mat4(), 0);
+			Traverse(args->root, args->root, ray, *args->lights, *args->ambient, r, g, b, t_min, glm::mat4(), 0, *args->global_map, *args->caustic_map);
 			image(x, y, 0) = r;
 			image(x, y, 1) = g;
 			image(x, y, 2) = b;
@@ -226,7 +230,7 @@ void AntiAlias(void *data)
 					Ray ray(*args->eye, p_world);
 					double t_min = std::numeric_limits<double>::max();
 					double rr, gg, bb;
-					if (!Traverse(args->root, args->root, ray, *args->lights, *args->ambient, rr, gg, bb, t_min, glm::mat4(), 0))
+					if (!Traverse(args->root, args->root, ray, *args->lights, *args->ambient, rr, gg, bb, t_min, glm::mat4(), 0, *args->global_map, *args->caustic_map))
 					{
 						rr = 0.1;
 						gg = 0.1;
@@ -278,30 +282,34 @@ void Render(
 	const glm::mat4 transform = GetTransform(nx, ny, eye, view, up, fovy);
 	Image pre_image = image;
 
-	PhotonMap global_map;
-	PhotonMap caustic_map;
+	PhotonMapper photon_mapper;
+	photon_mapper.MapPhotons(lights, root);
 
-	MapPhotons(lights, root, &global_map, &caustic_map);
+	const PhotonMap &global_map = photon_mapper.GlobalMap();
+	const PhotonMap &caustic_map = photon_mapper.CausticMap();
+
+	std::cout << "Global photon map size: " << global_map.size() << std::endl;
+	std::cout << "Caustic photon map size: " << caustic_map.size() << std::endl;
 
 	int n = 0;
-	int p = 100 * THREAD_COUNT * ROWS_PER_THREAD / ny;
+	int p = 100 * RENDER_THREAD_COUNT * ROWS_PER_THREAD / ny;
 	// Initialize threads
-	std::vector<std::thread> threads(THREAD_COUNT);
-	struct RowRenderArgs default_args = {root, &pre_image, &eye, &ambient, &lights, &transform, nx, ny, 0, &image};
-	std::vector<struct RowRenderArgs> args = std::vector<struct RowRenderArgs>(THREAD_COUNT);
+	std::vector<std::thread> threads(RENDER_THREAD_COUNT);
+	struct RowRenderArgs default_args = {root, &pre_image, &eye, &ambient, &lights, &transform, nx, ny, 0, &image, &global_map, &caustic_map};
+	std::vector<struct RowRenderArgs> args = std::vector<struct RowRenderArgs>(RENDER_THREAD_COUNT);
 	for (auto &arg : args)
 	{
 		arg = default_args;
 	}
 
-	for (uint y = 0; y < ny; y += (THREAD_COUNT * ROWS_PER_THREAD))
+	for (uint y = 0; y < ny; y += (RENDER_THREAD_COUNT * ROWS_PER_THREAD))
 	{
 		std::cout << "Ray Trace Progress: " << n << "\%\r";
 		std::cout.flush();
 		n += p;
 
 		int offset = 0;
-		for (int i = 0; i < THREAD_COUNT; ++i)
+		for (int i = 0; i < RENDER_THREAD_COUNT; ++i)
 		{
 			args[i].y = y + offset;
 			offset += ROWS_PER_THREAD;
@@ -315,14 +323,14 @@ void Render(
 	std::cout << "Ray Trace Progress: 100\%" << std::endl;
 
 	n = 0;
-	for (uint y = 0; y < ny; y += (THREAD_COUNT * ROWS_PER_THREAD))
+	for (uint y = 0; y < ny; y += (RENDER_THREAD_COUNT * ROWS_PER_THREAD))
 	{
 		std::cout << "Anti-Aliasing Progress: " << n << "\%\r";
 		std::cout.flush();
 		n += p;
 
 		int offset = 0;
-		for (int i = 0; i < THREAD_COUNT; ++i)
+		for (int i = 0; i < RENDER_THREAD_COUNT; ++i)
 		{
 			args[i].y = y + offset;
 			offset += ROWS_PER_THREAD;

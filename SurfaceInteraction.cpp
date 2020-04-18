@@ -47,9 +47,21 @@ glm::vec3 Phong(
     const glm::vec3 &point,
     const glm::vec3 &ambient,
     const glm::vec3 &object_color,
-    Material *material)
+    Material *material,
+    const PhotonMap &global_map)
 {
-    glm::vec3 col = ambient * object_color;
+    glm::vec3 m = {0, 0, 0};
+    std::vector<Photon *> photons = global_map.get_within_range(0.1, point);
+    for (auto *photon : photons)
+    {
+        m += photon->power;
+    }
+    if (photons.size() > 1)
+    {
+        // m /= 1000.f; //photons.size();
+    }
+    glm::vec3 col = m * object_color;
+    // glm::vec3 col = ambient * object_color;
     for (Light *light : lights)
     {
         double l = LightReached(root, Ray(point, light->position), glm::mat4(), 1.0);

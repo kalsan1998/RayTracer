@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <iostream>
+#include <vector>
 
 template <class T>
 struct KdNode
@@ -25,19 +26,27 @@ public:
         node->data = data;
         InsertNode(node, root, 0);
     }
-    // Counts how many nodes have a pos with each dimension within r from p.
+    // Gets the nodes that have a pos with each dimension within r from p.
     // r is positive
-    int count_within_range(int r, const glm::vec3 &p) const
+    std::vector<T *> get_within_range(float r, const glm::vec3 &p) const
     {
-        return CountRange(root, p, r, 0);
+        std::vector<T *> v = std::vector<T *>();
+        GetRange(root, p, r, 0, v);
+        return v;
+    }
+    uint size() const
+    {
+        return s;
     }
 
 private:
-    KdNode<T> *InsertNode(KdNode<T> *node, KdNode<T> *root, int d);
-    int CountRange(KdNode<T> *root, const glm::vec3 &p, int r, int d) const;
+    KdNode<T> *InsertNode(KdNode<T> *node, KdNode<T> *&root, int d);
+    void GetRange(KdNode<T> *root, const glm::vec3 &p, float r,
+                  int d, std::vector<T *> &v) const;
 
     const int dim = 3;
-    KdNode<T> *root;
+    uint s = 0;
+    KdNode<T> *root = nullptr;
 };
 
 template <class T>
@@ -52,7 +61,7 @@ KdTree<T>::~KdTree()
 }
 
 template <class T>
-KdNode<T> *KdTree<T>::InsertNode(KdNode<T> *node, KdNode<T> *t, int d)
+KdNode<T> *KdTree<T>::InsertNode(KdNode<T> *node, KdNode<T> *&t, int d)
 {
     if (!node)
     {
@@ -60,8 +69,8 @@ KdNode<T> *KdTree<T>::InsertNode(KdNode<T> *node, KdNode<T> *t, int d)
     }
     else if (!t)
     {
-        t = new KdNode<T>();
-        t->pos = node->pos;
+        t = node;
+        ++s;
     }
     else if (node->pos[d] < t->pos[d])
     {
@@ -75,25 +84,32 @@ KdNode<T> *KdTree<T>::InsertNode(KdNode<T> *node, KdNode<T> *t, int d)
 }
 
 template <class T>
-int KdTree<T>::CountRange(KdNode<T> *t, const glm::vec3 &p, int r, int d) const
+void KdTree<T>::GetRange(KdNode<T> *t, const glm::vec3 &p, float r,
+                         int d, std::vector<T *> &v) const
 {
     if (!t)
     {
-        return 0;
+        return;
     }
     else if (t->pos[d] < p[d] - r)
     {
-        return CountRange(t->right, p, r, (d + 1) % dim);
+        GetRange(t->right, p, r, (d + 1) % dim, v);
     }
     else if (t->pos[d] > p[d] + r)
     {
-        return CountRange(t->left, p, r, (d + 1) % dim);
+        GetRange(t->left, p, r, (d + 1) % dim, v);
     }
     else if (t->pos[0] < p[0] + r && t->pos[0] > p[0] - r &&
-             t->pos[1] < p[1] + r && t->pos[0] > p[1] - r &&
+             t->pos[1] < p[1] + r && t->pos[1] > p[1] - r &&
              t->pos[2] < p[2] + r && t->pos[2] > p[2] - r)
     {
-        return 1 + CountRange(t->right, p, r, (d + 1) % dim) + CountRange(t->left, p, r, (d + 1) % dim);
+        v.push_back(&t->data);
+        GetRange(t->right, p, r, (d + 1) % dim, v);
+        GetRange(t->left, p, r, (d + 1) % dim, v);
     }
-    return CountRange(t->right, p, r, (d + 1) % dim) + CountRange(t->left, p, r, (d + 1) % dim);
+    else
+    {
+        GetRange(t->right, p, r, (d + 1) % dim, v);
+        GetRange(t->left, p, r, (d + 1) % dim, v);
+    }
 }

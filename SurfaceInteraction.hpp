@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 #include <list>
 
+#include "PhotonMapping.hpp"
+
 class SceneNode;
 class Light;
 class Material;
@@ -17,7 +19,8 @@ glm::vec3 Phong(
     const glm::vec3 &point,
     const glm::vec3 &ambient,
     const glm::vec3 &texture_color,
-    Material *material);
+    Material *material,
+    const PhotonMap &global_map);
 
 Ray CalculateRefraction(
     const glm::vec3 &world_point,

@@ -3,6 +3,8 @@ TODOs:
 -- Photon mapping: Caustics and radiosity
 - Make number of emitted photons scale relative to image resolution?
 
+-- clean up args for main function (make RayTracer a class?)
+
 -- Depth of field
 -- Soft shadows
 -- OBJ file advanced parsing: materials
