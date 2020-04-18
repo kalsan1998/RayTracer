@@ -2,6 +2,8 @@
 
 #include "RayTracer.hpp"
 #include "GeometryNode.hpp"
+#include "KdTree.hpp"
+
 #include <glm/ext.hpp>
 
 bool LightReached(const SceneNode *node, const Ray &ray, const glm::mat4 &m, const double &t_min)
@@ -38,7 +40,7 @@ bool LightReached(const SceneNode *node, const Ray &ray, const glm::mat4 &m, con
     }
 }
 
-glm::vec3 Phong(
+glm::vec3 Colour(
     const SceneNode *root,
     const std::list<Light *> &lights,
     const glm::vec3 &norm,
@@ -48,18 +50,29 @@ glm::vec3 Phong(
     const glm::vec3 &ambient,
     const glm::vec3 &object_color,
     Material *material,
-    const PhotonMap &global_map)
+    const PhotonMap &global_map,
+    const PhotonMap &caustic_map)
 {
-    glm::vec3 m = {0, 0, 0};
-    std::vector<Photon *> photons = global_map.get_within_range(0.1, point);
-    for (auto *photon : photons)
+    float max_distance;
+    glm::vec3 global = {0, 0, 0};
+    glm::vec3 caustic = {0, 0, 0};
+
+    std::vector<Photon *> photons = global_map.k_nearest(1, point, max_distance);
+    // for (auto *photon : photons)
+    // {
+    //     global += photon->power;
+    // }
+    // global /= M_PI * max_distance * max_distance * 100.f;
+
+    std::vector<Photon *> caustic_photons = caustic_map.k_nearest(500, point, max_distance);
+    for (auto *photon : caustic_photons)
     {
-        m += photon->power;
+        caustic += photon->power;
     }
-    if (photons.size() > 1)
-    {
-        // m /= 1000.f; //photons.size();
-    }
+    caustic /= M_PI * max_distance * max_distance * 100.f;
+    glm::vec3 m = caustic;
+
+    // glm::vec3 m = (global + caustic) / 2.0f;
     glm::vec3 col = m * object_color;
     // glm::vec3 col = ambient * object_color;
     for (Light *light : lights)

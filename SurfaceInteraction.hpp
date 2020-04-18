@@ -2,7 +2,6 @@
 
 #include <glm/glm.hpp>
 #include <list>
-
 #include "PhotonMapping.hpp"
 
 class SceneNode;
@@ -10,7 +9,7 @@ class Light;
 class Material;
 class Ray;
 
-glm::vec3 Phong(
+glm::vec3 Colour(
     const SceneNode *root,
     const std::list<Light *> &lights,
     const glm::vec3 &norm,
@@ -20,7 +19,8 @@ glm::vec3 Phong(
     const glm::vec3 &ambient,
     const glm::vec3 &texture_color,
     Material *material,
-    const PhotonMap &global_map);
+    const PhotonMap &global_map,
+    const PhotonMap &caustic_map);
 
 Ray CalculateRefraction(
     const glm::vec3 &world_point,

@@ -3,11 +3,12 @@
 #include "RayTracer.hpp"
 #include "GeometryNode.hpp"
 #include "SurfaceInteraction.hpp"
+#include "KdTree.hpp"
 
 #include <glm/ext.hpp>
 
 // Photons per light source.
-const uint PHOTONS_PER_THREAD = 10000;
+const uint PHOTONS_PER_THREAD = 100000;
 const uint PHOTON_MAPPING_THREAD_COUNT = 10;
 
 // Returns the node that is *closer* (using the t_min value)
@@ -44,8 +45,8 @@ const GeometryNode *GetClosestIntersection(const SceneNode *node, const Ray &ray
     return geo;
 }
 
-PhotonMapper::PhotonMapper() : global(),
-                               caustic(),
+PhotonMapper::PhotonMapper() : global(new KdTree<Photon>()),
+                               caustic(new KdTree<Photon>()),
                                threads(PHOTON_MAPPING_THREAD_COUNT),
                                global_lock(),
                                caustic_lock(),
@@ -128,16 +129,19 @@ void PhotonMapper::EmitPhoton(const SceneNode *root, const Ray *ray, Photon &pho
     float P_refr = refractivity * P_r;
     float P_refl = reflectivity * P_r;
     float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-    photon.power *= diffuse;
 
     if (r < P_refl)
     {
         // Specular Reflect
+
+        // photon.power *= diffuse; // will need this for coloured caustics (e.g. wine)
         glm::vec3 reflect = norm_ray - (2.0f * (glm::dot(norm_ray, normal) * normal));
         ray_out = Ray(world_point, world_point + reflect);
+        photon.caustic = false;
     }
     else if (r < P_refl + P_refr)
     {
+        // photon.power *= diffuse;
         // Refraction
         // NOTE: might hit itself
         // Already calculated refract ray
@@ -149,6 +153,7 @@ void PhotonMapper::EmitPhoton(const SceneNode *root, const Ray *ray, Photon &pho
             insert_caustic(photon, world_point);
         }
         // Diffuse
+        photon.power *= diffuse;
         photon.caustic = false;
         glm::vec3 reflect = norm_ray - (2.0f * (glm::dot(norm_ray, normal) * normal));
         ray_out = Ray(world_point, world_point + reflect);
@@ -173,13 +178,13 @@ void PhotonMapper::EmitPhoton(const SceneNode *root, const Ray *ray, Photon &pho
 void PhotonMapper::insert_global(Photon &photon, glm::vec3 &point)
 {
     global_lock.lock();
-    global.insert(photon, point);
+    global->insert(photon, point);
     global_lock.unlock();
 }
 void PhotonMapper::insert_caustic(Photon &photon, glm::vec3 &point)
 {
     caustic_lock.lock();
-    caustic.insert(photon, point);
+    caustic->insert(photon, point);
     caustic_lock.unlock();
 }
 

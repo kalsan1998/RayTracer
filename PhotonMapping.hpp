@@ -1,11 +1,11 @@
 #pragma once
 
-#include "KdTree.hpp"
 #include "SceneNode.hpp"
 #include "Light.hpp"
 
 #include <mutex>
 #include <thread>
+#include <vector>
 
 class Ray;
 
@@ -15,6 +15,9 @@ struct Photon
     bool first_surface_hit = false;
     bool caustic = true;
 };
+
+template <class T>
+class KdTree;
 
 using PhotonMap = KdTree<Photon>;
 
@@ -26,8 +29,8 @@ class PhotonMapper
 public:
     PhotonMapper();
     void MapPhotons(const std::list<Light *> &lights, const SceneNode *root);
-    const PhotonMap &GlobalMap() const { return global; }
-    const PhotonMap &CausticMap() const { return caustic; }
+    const PhotonMap *GlobalMap() const { return global; }
+    const PhotonMap *CausticMap() const { return caustic; }
 
 private:
     void EmitPhotonBatch(const Light *light, const SceneNode *root);
@@ -37,8 +40,8 @@ private:
     void insert_caustic(Photon &photon, glm::vec3 &point);
     void update_progress(int n);
 
-    PhotonMap global;
-    PhotonMap caustic;
+    PhotonMap *global;
+    PhotonMap *caustic;
 
     std::vector<std::thread> threads;
 

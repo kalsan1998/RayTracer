@@ -11,6 +11,7 @@
 #include "SurfaceInteraction.hpp"
 #include "Texture.hpp"
 #include "PhotonMapping.hpp"
+#include "KdTree.hpp"
 
 const int RENDER_THREAD_COUNT = 12;
 const int ROWS_PER_THREAD = 10;
@@ -105,7 +106,7 @@ bool Traverse(
 	normal = glm::normalize(normal);
 	glm::vec3 norm_ray = glm::normalize(ray.B_A);
 	glm::vec3 reflect = norm_ray - (2.0f * (glm::dot(norm_ray, normal) * normal));
-	glm::vec3 phong = Phong(root, lights, normal, norm_ray, reflect, world_point, ambient, object_color, geo->m_material, global_map);
+	glm::vec3 phong = Colour(root, lights, normal, norm_ray, reflect, world_point, ambient, object_color, geo->m_material, global_map, caustic_map);
 	double reflectivity = geo->m_material->Reflectivity();
 	double refractivity = geo->m_material->Refractivity();
 	double ior = geo->m_material->IndexOfRefraction();
@@ -285,8 +286,8 @@ void Render(
 	PhotonMapper photon_mapper;
 	photon_mapper.MapPhotons(lights, root);
 
-	const PhotonMap &global_map = photon_mapper.GlobalMap();
-	const PhotonMap &caustic_map = photon_mapper.CausticMap();
+	const PhotonMap &global_map = *photon_mapper.GlobalMap();
+	const PhotonMap &caustic_map = *photon_mapper.CausticMap();
 
 	std::cout << "Global photon map size: " << global_map.size() << std::endl;
 	std::cout << "Caustic photon map size: " << caustic_map.size() << std::endl;
