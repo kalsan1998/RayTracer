@@ -1,7 +1,7 @@
 white = gr.material({0.8, 0.8, 0.8}, {0.0, 0.0, 0.0}, 0)
-glass = gr.material_refr({0.6,0.6,0.6}, {0.9,0.9,0.9}, 100, 0.7, 1.05)
+glass = gr.material_refr({0.8,0.8,0.8}, {0.9,0.9,0.9}, 100, 0.9, 1.05)
 -- glass = gr.material({0.7, 1.0, 0.7}, {0.5, 0.7, 0.5}, 25)
-wine = gr.material_refr({0.42,0.1,0.08}, {0,0,0}, 0, 0.4, 1.3)
+wine = gr.material_refr({0.42,0.1,0.08}, {0,0,0}, 0, 0.6, 1.3)
 
 
 wallpaper_text = gr.texture('./textures/striped_wallpaper.png')

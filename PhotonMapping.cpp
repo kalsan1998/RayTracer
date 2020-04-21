@@ -134,14 +134,14 @@ void PhotonMapper::EmitPhoton(const SceneNode *root, const Ray *ray, Photon &pho
     {
         // Specular Reflect
 
-        // photon.power *= diffuse; // will need this for coloured caustics (e.g. wine)
+        photon.power *= diffuse; // will need this for coloured caustics (e.g. wine)
         glm::vec3 reflect = norm_ray - (2.0f * (glm::dot(norm_ray, normal) * normal));
         ray_out = Ray(world_point, world_point + reflect);
         photon.caustic = false;
     }
     else if (r < P_refl + P_refr)
     {
-        // photon.power *= diffuse;
+        photon.power *= diffuse;
         // Refraction
         // NOTE: might hit itself
         // Already calculated refract ray

@@ -69,7 +69,7 @@ glm::vec3 Colour(
     {
         caustic += photon->power;
     }
-    caustic /= M_PI * max_distance * max_distance * 100.f;
+    caustic /= M_PI * max_distance * max_distance * 500.f;
     glm::vec3 m = caustic;
 
     // glm::vec3 m = (global + caustic) / 2.0f;

@@ -2,9 +2,8 @@ TODOs:
 
 -- Photon mapping: Caustics and radiosity
 - Make number of emitted photons scale relative to image resolution?
-
--- Balance kd-tree
--- Make own heap data structure?
+- Balance kd-tree
+- Make own heap data structure?
 
 -- clean up args for main function (make RayTracer a class?)
 
