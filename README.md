@@ -1,7 +1,7 @@
 # RayTracer
 ## Feature Demos
 ### Caustics (using Photon Mapping)
-![](./Assets/images/room_1024.png)
+![](./Assets/images/room_1024_better.png)
 
 ### UV Mapping
 ![](./Assets/images/scene2.png)
