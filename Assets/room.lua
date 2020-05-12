@@ -65,6 +65,6 @@ sp2:translate(-3, 2, 0)
 
 l1 = gr.light({0,12.95, 5}, {0.9, 0.9, 0.9}, {0.25, 0.05, 0.001})
 
-gr.render(scene, './images/room.png', 256, 256, 
+gr.render(scene, './images/room.png', 1024, 1024, 
 	  {0, 5, -15}, {0, 0, 1}, {0, 1, 0}, 50,
 	  {0.2, 0.2, 0.2}, {l1})
